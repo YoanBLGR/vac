@@ -136,11 +136,24 @@ export const days = [
         time: "19:40",
         title: "Dîner face au soleil",
         type: "food",
-        detail: "Table extérieure chez Luciano. Coucher du soleil vers 19:58, puis lumière douce jusqu’à environ 20:25.",
-        location: {
-          label: "Voir Luciano",
-          url: "https://www.google.com/maps/search/?api=1&query=Luciano+Dhermi",
-        },
+        detail: "Trois belles tables face à la mer pour le coucher du soleil vers 19:58. Réserver pour 19:40 et demander une place en première ligne.",
+        options: [
+          {
+            name: "Platinium",
+            note: "Notre choix · cuisine soignée, service très apprécié",
+            url: "https://www.google.com/maps/search/?api=1&query=Platinium+Dhermi",
+          },
+          {
+            name: "Noah on the Beach",
+            note: "Plus intime · poissons et fruits de mer au bord de l’eau",
+            url: "https://www.google.com/maps/search/?api=1&query=Noah+on+the+Beach+Dhermi",
+          },
+          {
+            name: "Olio",
+            note: "Plus animé · cuisine italienne, seafood et cocktails",
+            url: "https://www.google.com/maps/search/?api=1&query=Olio+Dhermi",
+          },
+        ],
       },
     ],
   },

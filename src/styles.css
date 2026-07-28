@@ -2941,6 +2941,62 @@ h3 {
   color: var(--success);
 }
 
+.event-options {
+  display: grid;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.event-options__label {
+  color: var(--coral);
+  font-size: var(--text-xs);
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.event-options__list {
+  border-top: 1px solid var(--line);
+}
+
+.event-options__list > a {
+  display: grid;
+  min-height: 4.25rem;
+  grid-template-columns: 1.65rem 1fr auto;
+  align-items: center;
+  gap: var(--space-sm);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 180ms var(--ease-out-quart), transform 180ms var(--ease-out-quart);
+}
+
+.event-options__rank {
+  color: var(--coral);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+}
+
+.event-options__copy {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.event-options__copy strong {
+  font-size: var(--text-sm);
+  line-height: 1.25;
+}
+
+.event-options__copy small {
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.event-options__list > a > svg {
+  color: var(--sea);
+}
+
 .map-link {
   display: inline-flex;
   min-height: 2.75rem;
@@ -4428,6 +4484,11 @@ h3 {
 
   .event__summary:hover strong,
   .day-tab:hover:not(.day-tab--active) {
+    color: var(--sea);
+  }
+
+  .event-options__list > a:hover {
+    transform: translateX(0.2rem);
     color: var(--sea);
   }
 

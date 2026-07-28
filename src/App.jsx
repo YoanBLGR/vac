@@ -538,6 +538,23 @@ function EventItem({ event, index }) {
               ))}
             </ul>
           )}
+          {event.options?.length > 0 && (
+            <div className="event-options" aria-label="Restaurants proposés">
+              <span className="event-options__label">Nos meilleures options</span>
+              <div className="event-options__list">
+                {event.options.map((option, optionIndex) => (
+                  <a href={option.url} target="_blank" rel="noreferrer" key={option.name}>
+                    <span className="event-options__rank">{String(optionIndex + 1).padStart(2, "0")}</span>
+                    <span className="event-options__copy">
+                      <strong>{option.name}</strong>
+                      <small>{option.note}</small>
+                    </span>
+                    <ExternalLink size={15} aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
           {event.location && (
             <a className="map-link" href={event.location.url} target="_blank" rel="noreferrer">
               <MapPin size={16} />
