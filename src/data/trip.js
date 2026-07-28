@@ -202,7 +202,7 @@ export const days = [
           label: "Ouvrir Amar",
           url: "https://www.google.com/maps?q=40.159490,19.600400",
         },
-        tips: ["Chaussures d’eau", "Espèces pour parking et transats", "Dernier bain avant 17:10"],
+        tips: ["Chaussures d’eau", "Espèces pour parking et transats", "Quitter Drymades vers 17:10 pour se changer avant le vieux Dhërmi"],
       },
       {
         time: "18:15",
