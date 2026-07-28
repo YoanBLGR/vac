@@ -115,8 +115,8 @@ export const days = [
         type: "view",
         detail: "Une pause courte dans la pinède, puis le panorama essentiel sur Palasë, Dhërmi et la mer Ionienne.",
         location: {
-          label: "Ouvrir le col",
-          url: "https://www.google.com/maps/search/?api=1&query=Qafa+e+Llogarase",
+          label: "Ouvrir le panorama",
+          url: "https://www.google.com/maps?q=40.188045,19.599273",
         },
         tips: ["35 à 45 min maximum", "Vêtement léger pour le vent"],
       },
