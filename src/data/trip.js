@@ -118,7 +118,11 @@ export const days = [
           label: "Ouvrir le panorama",
           url: "https://www.google.com/maps?q=40.188045,19.599273",
         },
-        tips: ["35 à 45 min maximum", "Vêtement léger pour le vent"],
+        tips: [
+          "Emprunter l’ancienne route du col : le tunnel de Llogara contourne complètement le panorama",
+          "35 à 45 min maximum",
+          "Vêtement léger pour le vent",
+        ],
       },
       {
         time: "18:30",
