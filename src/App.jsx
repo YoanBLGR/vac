@@ -446,10 +446,7 @@ function HomeView({ onOpenDay, onNavigate }) {
 
         <section className="quote-section" aria-label="Note personnelle">
           <Heart size={21} fill="currentColor" aria-hidden="true" />
-          <blockquote>
-            “Je voulais nous offrir une semaine qui commence par une surprise et se termine avec du sel dans les
-            cheveux.”
-          </blockquote>
+          <blockquote>“Joyeux anniversaire mon coeur {"<3"}”</blockquote>
         </section>
       </div>
     </div>
