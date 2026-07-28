@@ -23,11 +23,19 @@ La révélation est mémorisée dans le navigateur. Pour repartir de zéro, supp
 
 La révélation superpose deux horloges : la scène WebGL ([`src/components/OrbitalScene.jsx`](./src/components/OrbitalScene.jsx)) et les calques de texte animés en CSS (bloc `.reveal-orbital` de [`src/styles.css`](./src/styles.css)). Elles partent ensemble : la scène prévient le parent dès que sa première image est rendue, puis lui transmet l’horodatage exact de son départ, sur lequel toutes les animations CSS sont recalées.
 
-Trois valeurs doivent donc rester cohérentes quand on retouche le minutage :
+### Changer la vitesse
+
+Un seul réglage : `REVEAL_TIME_SCALE` dans [`src/App.jsx`](./src/App.jsx). Il étire d’un même facteur la scène 3D et les animations CSS, donc sans les désynchroniser. `1` correspond au tempo écrit (10,7 s), `2` le double (21,4 s).
+
+Ne pas ralentir les deux séparément — c’est exactement ce qui faisait dériver les textes par rapport à la 3D dans les versions précédentes.
+
+### Changer la chorégraphie
+
+Trois valeurs doivent rester cohérentes entre elles. Elles sont écrites au tempo de base ; l’échelle s’applique par-dessus.
 
 - `SCENE_DURATION` dans `OrbitalScene.jsx` — la 3D s’arrête dès que la photo la recouvre ;
-- les délais du bloc `.reveal-orbital` dans `styles.css`, écrits en secondes réelles ;
-- `REVEAL_DURATION` dans [`src/App.jsx`](./src/App.jsx) — la durée totale avant de basculer sur le carnet.
+- les délais du bloc `.reveal-orbital` dans `styles.css`, en secondes ;
+- `REVEAL_DURATION` dans `App.jsx` — la durée totale avant de basculer sur le carnet.
 
 Les textures de la Terre et l’illustration finale sont préchargées pendant l’écran d’anniversaire : sans cela, la séquence démarre sur un temps mort et la côte apparaît avec un à-coup.
 

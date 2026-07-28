@@ -16,6 +16,10 @@ import * as THREE from "three";
  * Sans ce second temps, le commit React qui libère les calques tombe sur une
  * autre image que le début de la scène, et les textes dérivent par rapport à
  * la 3D.
+ *
+ * Le tempo global se règle avec `REVEAL_TIME_SCALE` (src/App.jsx), qui étire
+ * cette partition et les animations CSS du même facteur. Les secondes écrites
+ * ci-dessous ne changent pas.
  */
 const SCENE_DURATION = 7.9;
 
@@ -495,7 +499,7 @@ function createBeacon(coordinates, glowTexture, { scale = 0.13, color = 0xff8a5c
   return { group, glow, ring, ringMaterial, scale, position };
 }
 
-export default function OrbitalScene({ onReady, onStart }) {
+export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
   const mountRef = useRef(null);
   const readyRef = useRef(onReady);
   const startRef = useRef(onStart);
@@ -754,8 +758,12 @@ export default function OrbitalScene({ onReady, onStart }) {
       if (import.meta.env.DEV) mount.dataset.t = time.toFixed(2);
     };
 
+    // `time` reste exprimé dans les secondes de la partition ci-dessus : le
+    // facteur d'échelle n'agit que sur la conversion depuis l'horloge réelle,
+    // si bien que toute la séquence — mouvements, pulsations, dérive du soleil
+    // — s'étire d'un bloc.
     const loop = (now) => {
-      const time = Math.min((now - startedAt) / 1000, SCENE_DURATION);
+      const time = Math.min((now - startedAt) / 1000 / timeScale, SCENE_DURATION);
       draw(time);
       if (time < SCENE_DURATION) animationFrame = requestAnimationFrame(loop);
     };
@@ -830,7 +838,7 @@ export default function OrbitalScene({ onReady, onStart }) {
         if (liveScenes === 0) releaseOrbitalAssets();
       }, 600);
     };
-  }, []);
+  }, [timeScale]);
 
   return (
     <div className="orbital-webgl" ref={mountRef}>

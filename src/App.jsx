@@ -45,11 +45,23 @@ const loadOrbitalScene = () => import("./components/OrbitalScene");
 const OrbitalScene = lazy(loadOrbitalScene);
 
 /**
- * Durée totale de la révélation, en millisecondes. Doit rester alignée sur la
- * timeline CSS de `.reveal-orbital` (src/styles.css) et sur `SCENE_DURATION`
- * dans `OrbitalScene`. Le décompte ne démarre qu'une fois la scène prête.
+ * Durée de la révélation telle qu'elle est écrite, en millisecondes. Doit
+ * rester alignée sur la timeline CSS de `.reveal-orbital` (src/styles.css) et
+ * sur `SCENE_DURATION` dans `OrbitalScene`. Le décompte ne démarre qu'une fois
+ * la scène prête.
  */
 const REVEAL_DURATION = 10700;
+
+/**
+ * Seul réglage de vitesse de la séquence. La chorégraphie reste écrite une fois
+ * pour toutes dans le CSS et dans la scène ; ce facteur étire les deux
+ * ensemble — les étirer séparément est précisément ce qui les désynchronisait.
+ * 1 = tempo d'origine.
+ */
+const REVEAL_TIME_SCALE = 2;
+
+// Filet de sécurité de chargement, pas un temps de mise en scène : il ne suit
+// pas l'échelle.
 const REVEAL_STAGE_TIMEOUT = 3000;
 
 const navItems = [
@@ -262,10 +274,16 @@ function RevealSequence({ onDone }) {
   // ce décalage qui désynchronisait les textes de la 3D.
   const alignTimeline = useCallback(() => {
     const node = rootRef.current;
-    if (!node || originRef.current === null || !node.classList.contains("is-running")) return;
-    const startTime = originRef.current - (performance.now() - document.timeline.currentTime);
+    if (!node || !node.classList.contains("is-running")) return;
+    const startTime =
+      originRef.current === null
+        ? null
+        : originRef.current - (performance.now() - document.timeline.currentTime);
     node.getAnimations({ subtree: true }).forEach((animation) => {
-      animation.startTime = startTime;
+      // La vitesse d'abord : la régler déplace `startTime` pour conserver la
+      // position courante, et écraserait donc le recalage.
+      animation.playbackRate = 1 / REVEAL_TIME_SCALE;
+      if (startTime !== null) animation.startTime = startTime;
     });
   }, []);
 
@@ -298,7 +316,7 @@ function RevealSequence({ onDone }) {
       return () => clearTimeout(timer);
     }
     if (!staged) return undefined;
-    const timer = setTimeout(onDone, REVEAL_DURATION);
+    const timer = setTimeout(onDone, REVEAL_DURATION * REVEAL_TIME_SCALE);
     return () => clearTimeout(timer);
   }, [onDone, reducedMotion, staged]);
 
@@ -317,7 +335,7 @@ function RevealSequence({ onDone }) {
         <span className="orbital-stage__sky" />
         {!reducedMotion && (
           <Suspense fallback={null}>
-            <OrbitalScene onReady={stage} onStart={handleStart} />
+            <OrbitalScene onReady={stage} onStart={handleStart} timeScale={REVEAL_TIME_SCALE} />
           </Suspense>
         )}
         <span className="orbital-stage__dawn" />
