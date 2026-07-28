@@ -12,6 +12,10 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: [
         "images/albanian-riviera.webp",
+        "images/earth-clouds.png",
+        "images/earth-day-nasa.webp",
+        "images/earth-normal.jpg",
+        "images/earth-specular.jpg",
         "images/earth-night-nasa.jpg",
         "images/locked-dreamscape-v1.webp",
         "icons/icon-192.png",

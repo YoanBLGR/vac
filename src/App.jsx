@@ -252,6 +252,7 @@ function RevealSequence({ onDone }) {
         <span className="orbital-stage__vignette" />
         <span className="orbital-stage__grain" />
         <span className="orbital-stage__scan" />
+        <span className="orbital-stage__cloudpass" />
       </div>
 
       <div className="orbital-hud" aria-hidden="true">

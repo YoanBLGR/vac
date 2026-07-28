@@ -1216,6 +1216,7 @@ h3 {
 .orbital-stage__vignette,
 .orbital-stage__grain,
 .orbital-stage__scan,
+.orbital-stage__cloudpass,
 .orbital-coast,
 .orbital-coast img,
 .orbital-coast__veil,
@@ -1317,6 +1318,39 @@ h3 {
   animation: orbital-scan 1.45s 2.94s var(--ease-out-quart) forwards;
 }
 
+.orbital-stage__cloudpass {
+  z-index: 8;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(-14%, 9%, 0) scale(1.18);
+  animation: orbital-cloud-pass 1.72s 3.52s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+.orbital-stage__cloudpass::before,
+.orbital-stage__cloudpass::after {
+  position: absolute;
+  width: 94%;
+  height: 58%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 48% 56%, oklch(99% 0.025 84 / 0.92), oklch(93% 0.055 194 / 0.32) 48%, transparent 73%);
+  content: "";
+  filter: blur(1.6rem);
+}
+
+.orbital-stage__cloudpass::before {
+  top: 4%;
+  left: -31%;
+  transform: rotate(-13deg);
+}
+
+.orbital-stage__cloudpass::after {
+  right: -33%;
+  bottom: 2%;
+  transform: rotate(11deg) scale(1.08);
+}
+
 .orbital-hud {
   position: absolute;
   z-index: 20;
@@ -1380,7 +1414,7 @@ h3 {
   position: absolute;
   z-index: 18;
   right: var(--space-lg);
-  bottom: 14%;
+  bottom: 8.5%;
   left: var(--space-lg);
   display: grid;
   justify-items: start;
@@ -1500,13 +1534,14 @@ h3 {
   left: var(--space-lg);
   display: grid;
   justify-items: start;
-  color: oklch(25% 0.06 203);
+  color: oklch(96% 0.018 82);
   opacity: 0;
   pointer-events: none;
   transform: translateY(1rem);
   animation:
     orbital-descent-arrive 460ms 3.24s var(--ease-out-expo) forwards,
     orbital-descent-leave 260ms 5.02s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  text-shadow: 0 0.12rem 1.25rem oklch(16% 0.045 204 / 0.54);
 }
 
 .orbital-descent > strong {
@@ -1521,7 +1556,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  color: oklch(40% 0.065 193);
+  color: oklch(93% 0.026 82);
   font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
@@ -1574,9 +1609,9 @@ h3 {
 .orbital-coast {
   z-index: 30;
   overflow: hidden;
-  clip-path: circle(0% at 35% 68%);
   opacity: 0;
-  animation: orbital-coast-arrive 1.15s 5.04s var(--ease-out-expo) forwards;
+  transform: scale(1.025);
+  animation: orbital-coast-arrive 1.32s 5.02s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
 .orbital-coast img {
@@ -1584,8 +1619,8 @@ h3 {
   height: 100%;
   object-fit: cover;
   object-position: center 60%;
-  transform: scale(1.23) translate3d(-3%, 4%, 0);
-  animation: orbital-coast-camera 2.25s 5.04s var(--ease-out-quart) forwards;
+  transform: scale(1.17) translate3d(-2.5%, 3%, 0);
+  animation: orbital-coast-camera 2.32s 5.02s var(--ease-out-quart) forwards;
 }
 
 .orbital-coast__veil {
@@ -1595,10 +1630,11 @@ h3 {
 }
 
 .orbital-coast__flare {
-  background: radial-gradient(circle at 35% 68%, oklch(92% 0.11 78 / 0.82), transparent 19%);
+  background:
+    radial-gradient(circle at 50% 46%, oklch(98% 0.085 82 / 0.94), oklch(91% 0.1 62 / 0.3) 26%, transparent 58%);
   mix-blend-mode: screen;
   opacity: 0;
-  animation: orbital-flare 720ms 4.98s var(--ease-out-quart) both;
+  animation: orbital-flare 1.08s 4.91s cubic-bezier(0.65, 0, 0.35, 1) both;
 }
 
 .orbital-coast-copy {
@@ -1784,6 +1820,23 @@ h3 {
   }
 }
 
+@keyframes orbital-cloud-pass {
+  0% {
+    opacity: 0;
+    transform: translate3d(-16%, 10%, 0) scale(1.2);
+  }
+  34% {
+    opacity: 0.62;
+  }
+  62% {
+    opacity: 0.48;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(17%, -9%, 0) scale(1.04);
+  }
+}
+
 @keyframes orbital-hud-arrive {
   to {
     opacity: 1;
@@ -1868,12 +1921,12 @@ h3 {
 
 @keyframes orbital-coast-arrive {
   0% {
-    clip-path: circle(0% at 35% 68%);
     opacity: 0;
+    transform: scale(1.025);
   }
   100% {
-    clip-path: circle(125% at 35% 68%);
     opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -4862,6 +4915,7 @@ h3 {
 
   .orbital-webgl,
   .orbital-stage__scan,
+  .orbital-stage__cloudpass,
   .orbital-stage__grain,
   .orbital-hud,
   .orbital-opening,
