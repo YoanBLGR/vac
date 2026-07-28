@@ -120,7 +120,7 @@ export const days = [
         },
         tips: [
           "Emprunter l’ancienne route du col : le tunnel de Llogara contourne complètement le panorama",
-          "35 à 45 min maximum",
+          "35 à 45 min",
           "Vêtement léger pour le vent",
         ],
       },
