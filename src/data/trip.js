@@ -283,7 +283,7 @@ export const days = [
       },
       {
         time: "14:00",
-        title: "Déjeuner à Lui Potam",
+        title: "Déjeuner au restaurant Lui Potam",
         type: "food",
         detail: "Poulpe ou crevettes à partager, poisson entier grillé ou linguine aux fruits de mer.",
       },
