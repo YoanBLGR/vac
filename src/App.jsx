@@ -165,6 +165,48 @@ function LockedScreen({ canReveal, onReveal }) {
   );
 }
 
+function BirthdaySequence({ onDone }) {
+  const reducedMotion = useMemo(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    [],
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(onDone, reducedMotion ? 2200 : 5250);
+    return () => clearTimeout(timer);
+  }, [onDone, reducedMotion]);
+
+  return (
+    <main className="birthday-sequence" id="main-content" aria-live="polite">
+      <button className="birthday-sequence__skip" type="button" onClick={onDone}>
+        Continuer
+      </button>
+
+      <div className="birthday-sky" aria-hidden="true">
+        <span className="birthday-sky__stars" />
+        <span className="birthday-sky__glow" />
+        <span className="birthday-sky__halo" />
+      </div>
+
+      <div className="birthday-trace" aria-hidden="true">
+        <svg viewBox="0 0 360 360">
+          <path d="M180 294C160 272 70 214 70 132C70 88 100 64 135 64C158 64 174 77 180 95C186 77 202 64 225 64C260 64 290 88 290 132C290 214 200 272 180 294Z" />
+        </svg>
+        <span className="birthday-trace__spark" />
+      </div>
+
+      <section className="birthday-copy">
+        <p>31 juillet · Pour toi</p>
+        <h1 aria-label="Joyeux anniversaire mon cœur">
+          <span>Joyeux anniversaire</span>
+          <em>mon cœur</em>
+        </h1>
+        <small>Le premier cadeau est juste derrière la lumière.</small>
+      </section>
+    </main>
+  );
+}
+
 function RevealSequence({ onDone }) {
   const revealRef = useRef(null);
   const reducedMotion = useMemo(
@@ -852,6 +894,7 @@ function App() {
   const [forceLocked, setForceLocked] = useState(() => query.get("locked") === "1");
   const previewMode = query.get("preview") === "1";
   const [revealed, setRevealed] = useStoredState("albania-trip-revealed", false);
+  const [celebrating, setCelebrating] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [activeView, setActiveView] = useState("home");
   const [selectedDay, setSelectedDay] = useState(days[0].id);
@@ -879,12 +922,17 @@ function App() {
   }, []);
 
   useEffect(() => {
-    document.title = showLocked || revealing ? "Notre échappée" : "Albanie — Notre échappée";
-  }, [revealing, showLocked]);
+    document.title = showLocked || celebrating || revealing ? "Notre échappée" : "Albanie — Notre échappée";
+  }, [celebrating, revealing, showLocked]);
 
   const handleReveal = () => {
     if (!canReveal && !forceLocked) return;
     navigator.vibrate?.([18, 32, 28]);
+    setCelebrating(true);
+  };
+
+  const startReveal = () => {
+    setCelebrating(false);
     setRevealing(true);
   };
 
@@ -913,6 +961,10 @@ function App() {
     setActiveView(view);
     window.scrollTo({ top: 0, behavior: "auto" });
   };
+
+  if (celebrating) {
+    return <BirthdaySequence onDone={startReveal} />;
+  }
 
   if (revealing) {
     return <RevealSequence onDone={finishReveal} />;

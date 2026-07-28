@@ -873,6 +873,314 @@ h3 {
   animation: final-mark 400ms 3.62s var(--ease-out-quart) forwards;
 }
 
+.birthday-sequence {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 100svh;
+  overflow: hidden;
+  place-items: center;
+  background: oklch(7% 0.026 220);
+  color: var(--paper-high);
+  contain: strict;
+  animation: birthday-scene-leave 500ms 4.75s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+.birthday-sequence__skip {
+  position: absolute;
+  z-index: 20;
+  top: max(var(--space-md), env(safe-area-inset-top));
+  right: max(var(--space-md), env(safe-area-inset-right));
+  min-height: 2.75rem;
+  padding: 0 var(--space-md);
+  border: 1px solid oklch(91% 0.02 82 / 0.22);
+  border-radius: 999px;
+  background: oklch(11% 0.03 214 / 0.58);
+  color: oklch(93% 0.018 82);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  text-transform: uppercase;
+  transform: translateY(-0.55rem);
+  animation: birthday-skip-arrive 420ms 500ms var(--ease-out-quart) forwards;
+  backdrop-filter: blur(0.75rem);
+  transition:
+    border-color 180ms var(--ease-out-quart),
+    background 180ms var(--ease-out-quart),
+    transform 140ms var(--ease-out-quart);
+}
+
+.birthday-sequence__skip:hover {
+  border-color: oklch(85% 0.11 77 / 0.72);
+  background: oklch(18% 0.04 207 / 0.76);
+}
+
+.birthday-sequence__skip:active {
+  transform: scale(0.96);
+}
+
+.birthday-sky,
+.birthday-sky__stars,
+.birthday-sky__glow,
+.birthday-sky__halo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.birthday-sky {
+  z-index: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 47%, oklch(20% 0.06 205 / 0.58), transparent 32%),
+    linear-gradient(155deg, oklch(10% 0.033 214), oklch(5.5% 0.018 224));
+}
+
+.birthday-sky__stars {
+  inset: -8%;
+  background-image:
+    radial-gradient(circle, oklch(94% 0.025 82 / 0.72) 0 0.7px, transparent 1px),
+    radial-gradient(circle, oklch(78% 0.09 190 / 0.62) 0 0.8px, transparent 1.1px),
+    radial-gradient(circle, oklch(87% 0.08 78 / 0.5) 0 0.6px, transparent 0.95px);
+  background-position:
+    0 0,
+    1.8rem 2.4rem,
+    3.2rem 0.9rem;
+  background-size:
+    5.8rem 5.8rem,
+    7.7rem 7.7rem,
+    9.4rem 9.4rem;
+  opacity: 0;
+  transform: scale(1.04) rotate(-1deg);
+  animation:
+    birthday-stars-arrive 900ms 80ms var(--ease-out-quart) forwards,
+    birthday-stars-drift 4.6s 100ms linear forwards;
+}
+
+.birthday-sky__glow {
+  inset: 50%;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin: -0.4rem;
+  border-radius: 50%;
+  background: oklch(89% 0.13 78);
+  box-shadow:
+    0 0 2.5rem oklch(89% 0.13 78 / 0.8),
+    0 0 7rem oklch(69% 0.12 190 / 0.45);
+  opacity: 0;
+  transform: scale(0.1);
+  animation: birthday-glow-bloom 1.05s 3.75s var(--ease-out-expo) forwards;
+}
+
+.birthday-sky__halo {
+  top: 50%;
+  left: 50%;
+  width: min(72vw, 27rem);
+  height: min(72vw, 27rem);
+  border: 1px solid oklch(88% 0.1 78 / 0.36);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.12);
+  animation: birthday-halo-bloom 1.05s 3.55s var(--ease-out-expo) forwards;
+}
+
+.birthday-trace {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: min(88vw, 30rem);
+  aspect-ratio: 1;
+  opacity: 0.54;
+  transform: translate(-50%, -51%);
+  animation: birthday-trace-leave 760ms 3.42s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+.birthday-trace svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 0.8rem oklch(87% 0.12 78 / 0.42));
+}
+
+.birthday-trace path {
+  fill: none;
+  stroke: oklch(88% 0.13 78);
+  stroke-dasharray: 850;
+  stroke-dashoffset: 850;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.45;
+  animation: birthday-heart-draw 2.35s 350ms var(--ease-out-quart) forwards;
+}
+
+.birthday-trace__spark {
+  position: absolute;
+  top: 24.5%;
+  left: 50%;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: oklch(93% 0.12 82);
+  box-shadow:
+    0 0 0 0.35rem oklch(88% 0.12 78 / 0.12),
+    0 0 1.3rem oklch(90% 0.13 78 / 0.85);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+  animation: birthday-spark 1.75s 720ms var(--ease-out-quart) forwards;
+}
+
+.birthday-copy {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  width: min(100% - 2.5rem, 42rem);
+  justify-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.birthday-copy p,
+.birthday-copy h1 span,
+.birthday-copy h1 em,
+.birthday-copy small {
+  opacity: 0;
+  transform: translateY(1rem);
+  animation:
+    birthday-copy-arrive 650ms var(--ease-out-expo) forwards,
+    birthday-copy-leave 420ms 3.42s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+.birthday-copy p {
+  color: oklch(86% 0.11 78);
+  font-size: var(--text-xs);
+  font-weight: 750;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  animation-delay: 700ms, 3.42s;
+}
+
+.birthday-copy h1 {
+  display: grid;
+  gap: 0.06em;
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 16vw, 8rem);
+  font-weight: 400;
+  letter-spacing: -0.065em;
+  line-height: 0.86;
+}
+
+.birthday-copy h1 span {
+  color: oklch(96% 0.018 82);
+  animation-delay: 950ms, 3.48s;
+}
+
+.birthday-copy h1 em {
+  color: oklch(79% 0.14 51);
+  font-style: normal;
+  word-spacing: 0.1em;
+  animation-delay: 1.16s, 3.54s;
+}
+
+.birthday-copy small {
+  max-width: 27rem;
+  color: oklch(86% 0.032 190);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  animation-delay: 1.62s, 3.58s;
+}
+
+@keyframes birthday-skip-arrive {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes birthday-stars-arrive {
+  to {
+    opacity: 0.82;
+  }
+}
+
+@keyframes birthday-stars-drift {
+  to {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes birthday-heart-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes birthday-spark {
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  76% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+}
+
+@keyframes birthday-copy-arrive {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes birthday-copy-leave {
+  to {
+    opacity: 0;
+    transform: translateY(-0.7rem);
+  }
+}
+
+@keyframes birthday-trace-leave {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -51%) scale(0.38) rotate(-5deg);
+  }
+}
+
+@keyframes birthday-halo-bloom {
+  30% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.5);
+  }
+}
+
+@keyframes birthday-glow-bloom {
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(85);
+  }
+}
+
+@keyframes birthday-scene-leave {
+  to {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+}
+
 .reveal-orbital {
   isolation: isolate;
   display: block;
@@ -4518,6 +4826,42 @@ h3 {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .birthday-sequence {
+    animation: none !important;
+  }
+
+  .birthday-sequence__skip,
+  .birthday-sky__stars,
+  .birthday-copy p,
+  .birthday-copy h1 span,
+  .birthday-copy h1 em,
+  .birthday-copy small {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+
+  .birthday-sky__stars {
+    opacity: 0.7;
+  }
+
+  .birthday-trace {
+    opacity: 0.42;
+    transform: translate(-50%, -51%);
+    animation: none !important;
+  }
+
+  .birthday-trace path {
+    stroke-dashoffset: 0;
+    animation: none !important;
+  }
+
+  .birthday-trace__spark,
+  .birthday-sky__glow,
+  .birthday-sky__halo {
+    display: none;
   }
 
   .reveal-orbital {
