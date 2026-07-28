@@ -2327,6 +2327,8 @@ h3 {
 }
 
 .flight-ribbon {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: var(--space-lg);
   margin-top: calc(var(--space-xl) * -1);

@@ -13,7 +13,7 @@ Ouvrir ensuite l’adresse affichée par Vite.
 
 ## Voir les états de la surprise
 
-- `/?locked=1` : force l’écran secret pour le tester.
+- `/?locked=1` : force l’écran secret, active « Briser le sceau » et permet de rejouer l’animation à chaque rechargement, y compris en production.
 - `/?preview=1` : autorise l’ouverture avant la date prévue.
 - Sans paramètre : l’app se déverrouille automatiquement le 31 juillet 2026 à 00:00, heure de Paris.
 
@@ -57,4 +57,3 @@ Le service worker met automatiquement en cache l’interface, les polices, les i
 - Icônes PWA : [`public/icons/`](./public/icons/)
 - Régénérer les icônes : `npm run icons`
 - Réoptimiser l’illustration depuis un PNG source : `npm run assets`
-

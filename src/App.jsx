@@ -883,7 +883,6 @@ function App() {
     setRevealed(true);
     if (forceLocked) {
       setForceLocked(false);
-      window.history.replaceState({}, "", `${window.location.pathname}?preview=1`);
     }
   };
 
