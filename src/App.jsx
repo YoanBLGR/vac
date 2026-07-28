@@ -361,7 +361,7 @@ function RevealSequence({ onDone }) {
 
       <div className="orbital-opening" aria-hidden="true">
         <span>Le jour se lève</span>
-        <strong>Deux points, une même lumière.</strong>
+        <strong>Notre aventure commence ici.</strong>
       </div>
 
       <div className="orbital-route-card" aria-hidden="true">
