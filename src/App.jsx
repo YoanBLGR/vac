@@ -53,6 +53,7 @@ const eventIcons = {
   culture: Landmark,
   sunset: Sun,
   rest: Palmtree,
+  prep: Luggage,
 };
 
 function useStoredState(key, initialValue) {
@@ -526,7 +527,7 @@ function EventItem({ event, index }) {
         <ChevronDown size={19} />
       </button>
       <div className="event__reveal" id={panelId}>
-        <div aria-hidden={!open} inert={open ? undefined : ""}>
+        <div aria-hidden={!open} inert={open ? undefined : true}>
           <p>{event.detail}</p>
           {event.tips?.length > 0 && (
             <ul>
