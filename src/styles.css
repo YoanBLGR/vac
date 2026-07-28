@@ -2207,8 +2207,7 @@ h3 {
   line-height: 0.9;
 }
 
-.install-shortcut,
-.offline-pill {
+.install-shortcut {
   display: inline-flex;
   min-height: 2.5rem;
   align-items: center;
@@ -2218,19 +2217,9 @@ h3 {
   border-radius: 999px;
   background: var(--paper-high);
   color: var(--ink-soft);
+  cursor: pointer;
   font-size: var(--text-xs);
   font-weight: 650;
-}
-
-.install-shortcut {
-  cursor: pointer;
-}
-
-.offline-pill > span {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: var(--success);
 }
 
 .view {

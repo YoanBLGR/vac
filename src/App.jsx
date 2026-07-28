@@ -342,16 +342,11 @@ function AppHeader({ title, onInstall, installable }) {
         <BrandMark />
       </div>
       <p>{title}</p>
-      {installable ? (
+      {installable && (
         <button className="install-shortcut" type="button" onClick={onInstall}>
           <ArrowDown size={16} />
           <span>Installer</span>
         </button>
-      ) : (
-        <span className="offline-pill">
-          <span />
-          Hors ligne
-        </span>
       )}
     </header>
   );
