@@ -413,7 +413,7 @@ function HomeView({ onOpenDay, onNavigate }) {
           <h2>La route sera déjà une destination.</h2>
           <p>
             Après Tirana, nous descendrons vers la Riviera par le vieux col de Llogara. Pins, virages et mer Ionienne :
-            le voyage commence avant même l’hôtel.
+            le voyage commence sur la route.
           </p>
           <button className="text-action" type="button" onClick={() => onOpenDay(days[0].id)}>
             Voir le programme du vendredi
