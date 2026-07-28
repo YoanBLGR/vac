@@ -1,0 +1,30 @@
+{
+  "name": "echappee-albanaise",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "icons": "node scripts/generate-icons.mjs",
+    "assets": "node scripts/optimize-assets.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/onest": "^5.2.6",
+    "@fontsource/gloock": "^5.2.5",
+    "lucide-react": "^1.27.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.2.0",
+    "sharp": "^0.35.3",
+    "vite": "^7.3.6",
+    "vite-plugin-pwa": "^1.2.0"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.8"
+  }
+}
