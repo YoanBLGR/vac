@@ -130,7 +130,7 @@ export const days = [
         time: "18:50",
         title: "Premier bain à Dhërmi",
         type: "swim",
-        detail: "Une baignade courte dans une mer autour de 25–27 °C, avant que la lumière ne devienne dorée.",
+        detail: "Une baignade dans une mer autour de 25–27 °C, avant que la lumière ne devienne dorée.",
       },
       {
         time: "19:40",
