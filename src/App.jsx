@@ -540,7 +540,7 @@ function EventItem({ event, index }) {
           )}
           {event.options?.length > 0 && (
             <div className="event-options" aria-label="Restaurants proposés">
-              <span className="event-options__label">Nos meilleures options</span>
+              <span className="event-options__label">Meilleures options</span>
               <div className="event-options__list">
                 {event.options.map((option, optionIndex) => (
                   <a href={option.url} target="_blank" rel="noreferrer" key={option.name}>
