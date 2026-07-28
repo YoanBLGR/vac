@@ -172,7 +172,7 @@ export const days = [
     events: [
       {
         time: "08:00",
-        title: "Petit-déjeuner léger",
+        title: "Petit-déjeuner à l’hôtel",
         type: "food",
         detail: "Buffet au Blue Boutique. Préparer maillots, chaussures d’eau, masque, tuba et pochette étanche.",
       },
