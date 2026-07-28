@@ -21,6 +21,7 @@ import {
   Clock3,
   Compass,
   ExternalLink,
+  Footprints,
   Heart,
   Hotel,
   Info,
@@ -84,6 +85,7 @@ const eventIcons = {
   sunset: Sun,
   rest: Palmtree,
   prep: Luggage,
+  walk: Footprints,
 };
 
 function useStoredState(key, initialValue) {
