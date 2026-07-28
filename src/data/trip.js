@@ -118,7 +118,7 @@ export const days = [
           label: "Ouvrir le col",
           url: "https://www.google.com/maps/search/?api=1&query=Qafa+e+Llogarase",
         },
-        tips: ["35 à 45 min maximum", "Vêtement léger pour le vent", "Ne rien laisser visible dans la voiture"],
+        tips: ["35 à 45 min maximum", "Vêtement léger pour le vent"],
       },
       {
         time: "18:30",
