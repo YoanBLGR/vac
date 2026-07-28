@@ -559,7 +559,7 @@ function DayView({ selectedId, onSelect }) {
       <div className="page-intro">
         <p className="section-kicker">Le carnet</p>
         <h1>Jour après jour</h1>
-        <p>Une seule mission : profiter du prochain moment.</p>
+        <p>Le programme est prêt. Il ne reste plus qu’à en profiter.</p>
       </div>
       <DaySelector selectedId={selected.id} onSelect={onSelect} />
       <section className="day-detail" key={selected.id}>
