@@ -93,7 +93,7 @@ export const days = [
         time: "06:50",
         title: "Rendez-vous à Beauvais",
         type: "travel",
-        detail: "Bagage, contrôles, puis un vrai petit-déjeuner avant de rejoindre la porte vers 08:30.",
+        detail: "Petit café avant de rejoindre la porte d’embarquement vers 08h30.",
         tips: ["Cartes d’embarquement hors ligne", "Passeports ou CNI accessibles", "Petit sac plage à portée de main"],
       },
       {
