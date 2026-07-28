@@ -311,13 +311,26 @@ export const days = [
       },
       {
         time: "20:20",
-        title: "Fig & Olive",
+        title: "Dîner autour d’Himarë",
         type: "food",
-        detail: "Dîner romantique sous le château, sur une terrasse dominant la baie.",
-        location: {
-          label: "Voir la terrasse",
-          url: "https://www.google.com/maps?q=40.114550,19.730490",
-        },
+        detail: "Trois excellentes tables pour prolonger la soirée entre terrasse panoramique, cuisine méditerranéenne et poisson frais. Réserver en avance.",
+        options: [
+          {
+            name: "Fig & Olive",
+            note: "Notre choix · terrasse sous les oliviers, cuisine méditerranéenne soignée et très beau cadre",
+            url: "https://www.google.com/maps?q=40.114550,19.730490",
+          },
+          {
+            name: "ELÉA Restaurant",
+            note: "Cuisine la plus aboutie · jardin panoramique, moussaka et orzo à l’agneau très réputés",
+            url: "https://www.google.com/maps?q=40.094700,19.766800",
+          },
+          {
+            name: "Taverna Lefteri",
+            note: "Option authentique · poisson frais et spécialités gréco-albanaises près de la promenade",
+            url: "https://www.google.com/maps/search/?api=1&query=Taverna+Lefteri+Himare",
+          },
+        ],
       },
     ],
   },
