@@ -258,7 +258,7 @@ function RevealSequence({ onDone }) {
         <div className="orbital-hud__signal">
           <span />
           <div>
-            <small>Signal verrouillé</small>
+            <small>Cap verrouillé</small>
             <strong>EA·260731</strong>
           </div>
         </div>
@@ -269,8 +269,8 @@ function RevealSequence({ onDone }) {
       </div>
 
       <div className="orbital-opening" aria-hidden="true">
-        <span>Une nuit</span>
-        <strong>Deux points dans le noir.</strong>
+        <span>Le jour se lève</span>
+        <strong>Deux points, une même lumière.</strong>
       </div>
 
       <div className="orbital-route-card" aria-hidden="true">

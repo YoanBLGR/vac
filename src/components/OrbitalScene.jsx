@@ -41,61 +41,6 @@ function createGlowTexture() {
   return texture;
 }
 
-function createStarField() {
-  const count = window.innerWidth < 600 ? 850 : 1450;
-  const positions = new Float32Array(count * 3);
-  const sizes = new Float32Array(count);
-
-  for (let index = 0; index < count; index += 1) {
-    const radius = 12 + Math.random() * 27;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(2 * Math.random() - 1);
-    positions[index * 3] = radius * Math.sin(phi) * Math.cos(theta);
-    positions[index * 3 + 1] = radius * Math.cos(phi);
-    positions[index * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
-    sizes[index] = 0.45 + Math.random() * 1.3;
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
-
-  const material = new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    uniforms: {
-      uOpacity: { value: 1 },
-      uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-    },
-    vertexShader: `
-      attribute float aSize;
-      uniform float uPixelRatio;
-      varying float vGlow;
-
-      void main() {
-        vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
-        gl_Position = projectionMatrix * viewPosition;
-        gl_PointSize = aSize * uPixelRatio * (34.0 / -viewPosition.z);
-        vGlow = aSize;
-      }
-    `,
-    fragmentShader: `
-      uniform float uOpacity;
-      varying float vGlow;
-
-      void main() {
-        float distanceToCenter = distance(gl_PointCoord, vec2(.5));
-        float glow = smoothstep(.5, .02, distanceToCenter);
-        vec3 color = mix(vec3(.42, .74, .76), vec3(1.0, .78, .46), step(1.25, vGlow));
-        gl_FragColor = vec4(color, glow * uOpacity);
-      }
-    `,
-  });
-
-  return new THREE.Points(geometry, material);
-}
-
 function createAtmosphereMaterial() {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
@@ -104,7 +49,7 @@ function createAtmosphereMaterial() {
     blending: THREE.AdditiveBlending,
     uniforms: {
       uOpacity: { value: 1 },
-      uColor: { value: new THREE.Color(0x5bb4b7) },
+      uColor: { value: new THREE.Color(0x70cad6) },
     },
     vertexShader: `
       varying vec3 vNormal;
@@ -189,9 +134,9 @@ function createCloudMaterial(layer) {
         vec2 flow = vec2(uTime * (.007 + uLayer * .002), sin(uTime * .04) * .03);
         float cloud = fbm(vUv * vec2(9.0, 5.2) + flow + uLayer * 8.7);
         cloud *= fbm(vUv * vec2(18.0, 7.0) - flow * .7 + 3.8);
-        float alpha = smoothstep(.28, .56, cloud) * (.16 - uLayer * .035);
+        float alpha = smoothstep(.28, .56, cloud) * (.23 - uLayer * .04);
         float facing = pow(max(vNormal.z, 0.0), .34);
-        vec3 color = mix(vec3(.38, .66, .68), vec3(.91, .80, .62), cloud);
+        vec3 color = mix(vec3(.88, .96, .92), vec3(1.0, .83, .62), cloud);
         gl_FragColor = vec4(color, alpha * facing * uOpacity);
       }
     `,
@@ -338,7 +283,7 @@ function createRelief(glowTexture) {
 
   const group = new THREE.Group();
   const materials = [];
-  const layerColors = [0x071f25, 0x0b3035, 0x174c49];
+  const layerColors = [0x4d7f79, 0x63978a, 0x82af93];
 
   layerColors.forEach((color, index) => {
     const material = new THREE.MeshStandardMaterial({
@@ -355,9 +300,9 @@ function createRelief(glowTexture) {
   });
 
   const surfaceMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x4b8978,
-    emissive: 0x0b292b,
-    emissiveIntensity: 0.7,
+    color: 0xa3c795,
+    emissive: 0x23453e,
+    emissiveIntensity: 0.18,
     roughness: 0.6,
     metalness: 0.08,
     clearcoat: 0.35,
@@ -370,7 +315,7 @@ function createRelief(glowTexture) {
   group.add(surface);
 
   const edgeMaterial = new THREE.LineBasicMaterial({
-    color: 0xe2b778,
+    color: 0xffc878,
     transparent: true,
     opacity: 0,
     blending: THREE.AdditiveBlending,
@@ -385,7 +330,7 @@ function createRelief(glowTexture) {
     -(y - centerY) * scale,
   ]);
   const contourMaterial = new THREE.LineBasicMaterial({
-    color: 0xbfe1cf,
+    color: 0xf6edda,
     transparent: true,
     opacity: 0,
     blending: THREE.AdditiveBlending,
@@ -495,7 +440,7 @@ export default function OrbitalScene({ reducedMotion = false, durationScale = 1 
     renderer.setSize(mount.clientWidth, mount.clientHeight, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 1.34;
     renderer.autoClear = false;
     renderer.domElement.setAttribute("aria-hidden", "true");
     mount.appendChild(renderer.domElement);
@@ -507,16 +452,13 @@ export default function OrbitalScene({ reducedMotion = false, durationScale = 1 
     const reliefCamera = new THREE.PerspectiveCamera(43, mount.clientWidth / mount.clientHeight, 0.02, 30);
     reliefCamera.position.set(0, 0, 6.1);
 
-    const stars = createStarField();
-    spaceScene.add(stars);
-
     const earthGroup = new THREE.Group();
     earthScene.add(earthGroup);
     const earthGeometry = new THREE.SphereGeometry(2, window.innerWidth < 600 ? 96 : 128, window.innerWidth < 600 ? 48 : 72);
     const earthMaterial = new THREE.MeshStandardMaterial({
-      color: 0x173538,
-      emissive: 0x5a2a12,
-      emissiveIntensity: 1.25,
+      color: 0xffffff,
+      emissive: 0x173e43,
+      emissiveIntensity: 0.08,
       roughness: 0.88,
       metalness: 0.02,
       transparent: true,
@@ -527,12 +469,11 @@ export default function OrbitalScene({ reducedMotion = false, durationScale = 1 
     disposables.push(earthGeometry, earthMaterial);
 
     new THREE.TextureLoader().load(
-      "/images/earth-night-nasa.jpg",
+      "/images/earth-day-nasa.webp",
       (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
         earthMaterial.map = texture;
-        earthMaterial.emissiveMap = texture;
         earthMaterial.needsUpdate = true;
         disposables.push(texture);
       },
@@ -542,8 +483,8 @@ export default function OrbitalScene({ reducedMotion = false, durationScale = 1 
       },
     );
 
-    earthScene.add(new THREE.HemisphereLight(0x6da4aa, 0x071014, 0.52));
-    const sunLight = new THREE.DirectionalLight(0xf7c98e, 1.7);
+    earthScene.add(new THREE.HemisphereLight(0xe9fbf8, 0x6f7866, 1.5));
+    const sunLight = new THREE.DirectionalLight(0xffdda6, 3.1);
     sunLight.position.set(-4, 3, 5);
     earthScene.add(sunLight);
 
@@ -582,11 +523,11 @@ export default function OrbitalScene({ reducedMotion = false, durationScale = 1 
 
     const relief = createRelief(glowTexture);
     reliefScene.add(relief.group);
-    reliefScene.add(new THREE.HemisphereLight(0x7ab5ad, 0x06181d, 1.05));
-    const reliefKey = new THREE.DirectionalLight(0xf5b86d, 4.1);
+    reliefScene.add(new THREE.HemisphereLight(0xedfff7, 0x536a64, 1.75));
+    const reliefKey = new THREE.DirectionalLight(0xffcf87, 4.7);
     reliefKey.position.set(-3, 4, 6);
     reliefScene.add(reliefKey);
-    const reliefRim = new THREE.DirectionalLight(0x4ca6a9, 2.7);
+    const reliefRim = new THREE.DirectionalLight(0x78d1d3, 2.2);
     reliefRim.position.set(4, -2, 3);
     reliefScene.add(reliefRim);
     disposables.push(
@@ -676,9 +617,6 @@ export default function OrbitalScene({ reducedMotion = false, durationScale = 1 
       tiranaMarker.material.opacity = range(normalized, 0.32, 0.39) * earthFade;
       parisMarker.scale.setScalar(0.12 + Math.sin(seconds * 7) * 0.018);
       tiranaMarker.scale.setScalar(0.16 + Math.sin(seconds * 8 + 1) * 0.026);
-
-      stars.rotation.y = seconds * 0.003;
-      stars.material.uniforms.uOpacity.value = 1 - coastArrival;
 
       const reliefOpacity = reliefReveal * (1 - coastArrival);
       relief.materials.forEach((material) => {
