@@ -1,19 +1,65 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { ALBANIA_POINTS } from "../data/albania";
+
+/**
+ * Scène orbitale de la révélation.
+ *
+ * La timeline est exprimée en secondes réelles et doit rester alignée sur les
+ * délais CSS de `.reveal-orbital` (src/styles.css) ainsi que sur
+ * `REVEAL_DURATION` (src/App.jsx). Le raccord se fait en deux temps :
+ *
+ * - `onReady` prévient le parent que les textures sont décodées et que la
+ *   première image est à l'écran ; il libère alors les animations CSS ;
+ * - `onStart` lui transmet l'horodatage exact de la première image animée, sur
+ *   lequel il recale le départ de ces animations.
+ *
+ * Sans ce second temps, le commit React qui libère les calques tombe sur une
+ * autre image que le début de la scène, et les textes dérivent par rapport à
+ * la 3D.
+ */
+const SCENE_DURATION = 7.9;
 
 const DEG = Math.PI / 180;
+const EARTH_RADIUS = 2;
 const PARIS = { lat: 48.8566, lon: 2.3522 };
 const TIRANA = { lat: 41.3275, lon: 19.8187 };
-const LLOGARA_COORDINATES = { x: 92, y: 315 };
+const LLOGARA = { lat: 40.1986, lon: 19.5936 };
+
+// `ocean` est un masque (blanc = eau) et `clouds` une couverture en niveaux de
+// gris : ni l'un ni l'autre n'est une couleur, d'où le sRGB désactivé.
+const TEXTURE_SOURCES = [
+  ["day", "/images/earth-day-nasa.webp", true],
+  ["night", "/images/earth-night.webp", true],
+  ["ocean", "/images/earth-ocean.webp", false],
+  ["clouds", "/images/earth-clouds.webp", false],
+];
 
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
-const range = (value, start, end) => clamp01((value - start) / (end - start));
-const easeOutExpo = (value) => (value === 1 ? 1 : 1 - 2 ** (-10 * value));
+const easeOutCubic = (value) => 1 - (1 - value) ** 3;
 const easeInOutCubic = (value) =>
   value < 0.5 ? 4 * value ** 3 : 1 - (-2 * value + 2) ** 3 / 2;
-const smootherStep = (value) => value * value * value * (value * (value * 6 - 15) + 10);
-const dampFactor = (speed, delta) => 1 - Math.exp(-speed * delta);
+const easeInOutQuint = (value) =>
+  value < 0.5 ? 16 * value ** 5 : 1 - (-2 * value + 2) ** 5 / 2;
+const easeInQuad = (value) => value * value;
+const easeInOutSine = (value) => -(Math.cos(Math.PI * value) - 1) / 2;
+const linear = (value) => value;
+
+/**
+ * Piste de valeurs : `[[seconde, valeur, easing?], …]`.
+ * Le easing décrit la transition qui *arrive* sur la clé.
+ */
+function track(time, keys) {
+  if (time <= keys[0][0]) return keys[0][1];
+  for (let index = 1; index < keys.length; index += 1) {
+    const [end, value, ease = easeInOutCubic] = keys[index];
+    if (time <= end) {
+      const [start, previous] = keys[index - 1];
+      const progress = end === start ? 1 : (time - start) / (end - start);
+      return previous + (value - previous) * ease(clamp01(progress));
+    }
+  }
+  return keys[keys.length - 1][1];
+}
 
 function coordinateToVector({ lat, lon }, radius = 1) {
   const phi = (90 - lat) * DEG;
@@ -26,52 +72,202 @@ function coordinateToVector({ lat, lon }, radius = 1) {
   );
 }
 
-function createGlowTexture() {
+function slerpDirection(from, to, progress, target) {
+  const dot = THREE.MathUtils.clamp(from.dot(to), -1, 1);
+  const angle = Math.acos(dot);
+  if (angle < 1e-4) return target.copy(to);
+  const sine = Math.sin(angle);
+  return target
+    .copy(from)
+    .multiplyScalar(Math.sin((1 - progress) * angle) / sine)
+    .addScaledVector(to, Math.sin(progress * angle) / sine);
+}
+
+const textureCache = new Map();
+
+function loadTexture(url, srgb) {
+  if (!textureCache.has(url)) {
+    const pending = new Promise((resolve) => {
+      new THREE.TextureLoader().load(
+        url,
+        (texture) => {
+          if (srgb) texture.colorSpace = THREE.SRGBColorSpace;
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.minFilter = THREE.LinearMipmapLinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          resolve(texture);
+        },
+        undefined,
+        () => resolve(null),
+      );
+    });
+    textureCache.set(url, pending);
+  }
+  return textureCache.get(url);
+}
+
+/**
+ * Déclenché pendant l'écran d'anniversaire : le chunk three.js et les textures
+ * sont chargés avant que la révélation ne commence, ce qui supprime le temps
+ * d'attente au démarrage de la séquence.
+ */
+export function preloadOrbitalAssets() {
+  return Promise.all(TEXTURE_SOURCES.map(([, url, srgb]) => loadTexture(url, srgb)));
+}
+
+// Les textures sont partagées entre les montages plutôt que rechargées : en
+// mode strict React remonte le composant, et un rechargement à cet instant
+// décalerait la scène de plusieurs centaines de millisecondes par rapport à la
+// timeline CSS. Elles ne sont libérées qu'une fois la séquence réellement finie.
+let liveScenes = 0;
+
+function releaseOrbitalAssets() {
+  textureCache.forEach((pending) => pending.then((texture) => texture?.dispose()));
+  textureCache.clear();
+}
+
+function createRadialTexture(size, stops) {
   const canvas = document.createElement("canvas");
-  canvas.width = 128;
-  canvas.height = 128;
+  canvas.width = size;
+  canvas.height = size;
   const context = canvas.getContext("2d");
-  const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gradient.addColorStop(0, "rgba(255,247,219,1)");
-  gradient.addColorStop(0.12, "rgba(255,188,103,.98)");
-  gradient.addColorStop(0.32, "rgba(240,108,76,.52)");
-  gradient.addColorStop(1, "rgba(240,108,76,0)");
+  const half = size / 2;
+  const gradient = context.createRadialGradient(half, half, 0, half, half, half);
+  stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
   context.fillStyle = gradient;
-  context.fillRect(0, 0, 128, 128);
+  context.fillRect(0, 0, size, size);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
 }
 
-function createSunTexture() {
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 256;
-  const context = canvas.getContext("2d");
-  const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
-  gradient.addColorStop(0, "rgba(255,250,225,1)");
-  gradient.addColorStop(0.055, "rgba(255,236,178,.98)");
-  gradient.addColorStop(0.16, "rgba(255,190,103,.52)");
-  gradient.addColorStop(0.42, "rgba(255,167,79,.16)");
-  gradient.addColorStop(1, "rgba(255,167,79,0)");
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, 256, 256);
+function createEarthMaterial(textures) {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    uniforms: {
+      uDay: { value: textures.day },
+      uNight: { value: textures.night },
+      uOcean: { value: textures.ocean },
+      uSunDirection: { value: new THREE.Vector3(1, 0, 0) },
+      uOpacity: { value: 1 },
+      uExposure: { value: 1 },
+      uHaze: { value: 0 },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      varying vec3 vWorldNormal;
+      varying vec3 vWorldPosition;
 
-  context.save();
-  context.translate(128, 128);
-  for (let ray = 0; ray < 16; ray += 1) {
-    context.rotate(Math.PI / 8);
-    const rayGradient = context.createLinearGradient(16, 0, 118, 0);
-    rayGradient.addColorStop(0, "rgba(255,235,186,.2)");
-    rayGradient.addColorStop(1, "rgba(255,218,154,0)");
-    context.fillStyle = rayGradient;
-    context.fillRect(14, -0.45, 108, 0.9);
-  }
-  context.restore();
+      void main() {
+        vUv = uv;
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uDay;
+      uniform sampler2D uNight;
+      uniform sampler2D uOcean;
+      uniform vec3 uSunDirection;
+      uniform float uOpacity;
+      uniform float uExposure;
+      uniform float uHaze;
+      varying vec2 vUv;
+      varying vec3 vWorldNormal;
+      varying vec3 vWorldPosition;
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
+      void main() {
+        vec3 normal = normalize(vWorldNormal);
+        vec3 view = normalize(cameraPosition - vWorldPosition);
+        float incidence = dot(normal, uSunDirection);
+
+        // Terminateur doux : le jour se lève franchement mais sans arête dure.
+        float daylight = smoothstep(-0.18, 0.34, incidence);
+        float dawn = pow(1.0 - abs(incidence), 8.0);
+
+        vec3 albedo = texture2D(uDay, vUv).rgb;
+        vec3 lights = texture2D(uNight, vUv).rgb;
+        float water = texture2D(uOcean, vUv).r;
+
+        vec3 sunTint = mix(vec3(1.0, 0.63, 0.38), vec3(1.0, 0.97, 0.93), smoothstep(0.0, 0.5, incidence));
+        vec3 color = albedo * (0.085 + 1.22 * daylight) * sunTint;
+
+        // Reflet solaire sur les océans.
+        vec3 halfway = normalize(uSunDirection + view);
+        float glint = pow(max(dot(normal, halfway), 0.0), 58.0) * water * daylight;
+        color += vec3(1.0, 0.94, 0.8) * glint * 0.85;
+
+        // Lumières des villes côté nuit.
+        float nightMask = smoothstep(0.22, -0.1, incidence);
+        color += lights * lights * nightMask * 1.35;
+
+        // Diffusion atmosphérique rasante, chaude au niveau du terminateur.
+        float rim = pow(1.0 - max(dot(normal, view), 0.0), 3.2);
+        vec3 rimColor = mix(vec3(0.29, 0.58, 0.9), vec3(1.0, 0.61, 0.34), dawn);
+        color += rimColor * rim * (0.16 + daylight * 0.5);
+
+        // Voile atmosphérique de la descente finale.
+        color = mix(color, vec3(1.0, 0.86, 0.7), uHaze * (0.16 + rim * 0.5));
+
+        gl_FragColor = vec4(color * uExposure, uOpacity);
+        #include <colorspace_fragment>
+      }
+    `,
+  });
+}
+
+function createCloudMaterial(texture) {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: {
+      uMap: { value: texture },
+      uSunDirection: { value: new THREE.Vector3(1, 0, 0) },
+      uOpacity: { value: 0 },
+      uExposure: { value: 1 },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      varying vec3 vWorldNormal;
+      varying vec3 vWorldPosition;
+
+      void main() {
+        vUv = uv;
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uMap;
+      uniform vec3 uSunDirection;
+      uniform float uOpacity;
+      uniform float uExposure;
+      varying vec2 vUv;
+      varying vec3 vWorldNormal;
+      varying vec3 vWorldPosition;
+
+      void main() {
+        float coverage = texture2D(uMap, vUv).r;
+        if (coverage < 0.01) discard;
+
+        vec3 normal = normalize(vWorldNormal);
+        vec3 view = normalize(cameraPosition - vWorldPosition);
+        float incidence = dot(normal, uSunDirection);
+        float daylight = smoothstep(-0.24, 0.3, incidence);
+        float grazing = pow(1.0 - max(dot(normal, view), 0.0), 2.4);
+
+        vec3 color = mix(vec3(1.0, 0.72, 0.52), vec3(1.0, 0.99, 0.97), smoothstep(-0.05, 0.42, incidence));
+        float alpha = coverage * uOpacity * (0.12 + daylight * 0.94) * (1.0 - grazing * 0.35);
+
+        gl_FragColor = vec4(color * (0.5 + daylight * 0.72) * uExposure, alpha);
+        #include <colorspace_fragment>
+      }
+    `,
+  });
 }
 
 function createAtmosphereMaterial() {
@@ -81,10 +277,9 @@ function createAtmosphereMaterial() {
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     uniforms: {
+      uSunDirection: { value: new THREE.Vector3(1, 0, 0) },
       uOpacity: { value: 1 },
-      uSunDirection: { value: new THREE.Vector3(-0.5, 0.45, 0.72).normalize() },
-      uSkyColor: { value: new THREE.Color(0x66c9d8) },
-      uSunsetColor: { value: new THREE.Color(0xffb46f) },
+      uIntensity: { value: 1 },
     },
     vertexShader: `
       varying vec3 vWorldNormal;
@@ -98,159 +293,132 @@ function createAtmosphereMaterial() {
       }
     `,
     fragmentShader: `
-      uniform float uOpacity;
       uniform vec3 uSunDirection;
-      uniform vec3 uSkyColor;
-      uniform vec3 uSunsetColor;
+      uniform float uOpacity;
+      uniform float uIntensity;
       varying vec3 vWorldNormal;
       varying vec3 vWorldPosition;
 
       void main() {
-        vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
-        float fresnel = pow(1.0 - max(dot(vWorldNormal, viewDirection), 0.0), 2.65);
-        float daylight = smoothstep(-.35, .72, dot(vWorldNormal, uSunDirection));
-        float sunset = pow(1.0 - abs(dot(vWorldNormal, uSunDirection)), 7.0);
-        vec3 color = mix(uSkyColor, uSunsetColor, sunset * .72);
-        float alpha = fresnel * (.2 + daylight * .39) * uOpacity;
+        vec3 normal = normalize(vWorldNormal);
+        vec3 view = normalize(cameraPosition - vWorldPosition);
+        float fresnel = pow(1.0 - max(dot(normal, view), 0.0), 2.6);
+        float incidence = dot(normal, uSunDirection);
+        float daylight = smoothstep(-0.42, 0.46, incidence);
+        float dawn = pow(1.0 - abs(incidence), 6.0);
+
+        vec3 color = mix(vec3(0.24, 0.56, 0.98), vec3(1.0, 0.62, 0.32), dawn * 0.9);
+        float alpha = fresnel * (0.03 + daylight * 0.52) * uOpacity * uIntensity;
+
         gl_FragColor = vec4(color, alpha);
+        #include <colorspace_fragment>
       }
     `,
   });
 }
 
-function createSurfaceHazeMaterial() {
-  return new THREE.ShaderMaterial({
-    side: THREE.FrontSide,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.NormalBlending,
-    uniforms: {
-      uOpacity: { value: 1 },
-      uSunDirection: { value: new THREE.Vector3(-0.5, 0.45, 0.72).normalize() },
-    },
-    vertexShader: `
-      varying vec3 vWorldNormal;
-      varying vec3 vWorldPosition;
+function createStarField() {
+  const count = 620;
+  const positions = new Float32Array(count * 3);
+  const seeds = new Float32Array(count);
+  const sizes = new Float32Array(count);
+  let state = 20;
+  const random = () => {
+    state = (state * 16807) % 2147483647;
+    return state / 2147483647;
+  };
 
-      void main() {
-        vWorldNormal = normalize(mat3(modelMatrix) * normal);
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        gl_Position = projectionMatrix * viewMatrix * worldPosition;
-      }
-    `,
-    fragmentShader: `
-      uniform float uOpacity;
-      uniform vec3 uSunDirection;
-      varying vec3 vWorldNormal;
-      varying vec3 vWorldPosition;
+  for (let index = 0; index < count; index += 1) {
+    const height = random() * 2 - 1;
+    const angle = random() * Math.PI * 2;
+    const ring = Math.sqrt(1 - height * height);
+    const radius = 42 + random() * 24;
+    positions[index * 3] = Math.cos(angle) * ring * radius;
+    positions[index * 3 + 1] = height * radius;
+    positions[index * 3 + 2] = Math.sin(angle) * ring * radius;
+    seeds[index] = random();
+    sizes[index] = 0.7 + random() * random() * 2.9;
+  }
 
-      void main() {
-        vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
-        float rim = pow(1.0 - max(dot(vWorldNormal, viewDirection), 0.0), 5.2);
-        float light = smoothstep(-.15, .65, dot(vWorldNormal, uSunDirection));
-        vec3 color = mix(vec3(.47, .79, .83), vec3(1.0, .77, .48), pow(light, 4.0));
-        gl_FragColor = vec4(color, rim * (.06 + light * .1) * uOpacity);
-      }
-    `,
-  });
-}
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
+  geometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
 
-function createCloudMaterial(layer) {
-  return new THREE.ShaderMaterial({
+  const material = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     uniforms: {
       uTime: { value: 0 },
-      uOpacity: { value: 1 },
-      uLayer: { value: layer },
+      uOpacity: { value: 0 },
+      uPixelRatio: { value: 1 },
     },
     vertexShader: `
-      varying vec2 vUv;
-      varying vec3 vNormal;
+      attribute float aSeed;
+      attribute float aSize;
+      uniform float uTime;
+      uniform float uPixelRatio;
+      varying float vTwinkle;
+      varying float vSeed;
 
       void main() {
-        vUv = uv;
-        vNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * viewPosition;
+        gl_PointSize = aSize * uPixelRatio;
+        vTwinkle = 0.55 + 0.45 * sin(uTime * (0.8 + aSeed * 2.4) + aSeed * 42.0);
+        vSeed = aSeed;
       }
     `,
     fragmentShader: `
-      uniform float uTime;
       uniform float uOpacity;
-      uniform float uLayer;
-      varying vec2 vUv;
-      varying vec3 vNormal;
-
-      float hash(vec2 point) {
-        return fract(sin(dot(point, vec2(127.1, 311.7))) * 43758.5453);
-      }
-
-      float noise(vec2 point) {
-        vec2 cell = floor(point);
-        vec2 local = fract(point);
-        local = local * local * (3.0 - 2.0 * local);
-        return mix(
-          mix(hash(cell), hash(cell + vec2(1.0, 0.0)), local.x),
-          mix(hash(cell + vec2(0.0, 1.0)), hash(cell + vec2(1.0, 1.0)), local.x),
-          local.y
-        );
-      }
-
-      float fbm(vec2 point) {
-        float value = 0.0;
-        float amplitude = 0.5;
-        for (int octave = 0; octave < 5; octave++) {
-          value += amplitude * noise(point);
-          point = point * 2.04 + 17.3;
-          amplitude *= 0.5;
-        }
-        return value;
-      }
+      varying float vTwinkle;
+      varying float vSeed;
 
       void main() {
-        vec2 flow = vec2(uTime * (.007 + uLayer * .002), sin(uTime * .04) * .03);
-        float cloud = fbm(vUv * vec2(9.0, 5.2) + flow + uLayer * 8.7);
-        cloud *= fbm(vUv * vec2(18.0, 7.0) - flow * .7 + 3.8);
-        float alpha = smoothstep(.3, .58, cloud) * (.12 - uLayer * .025);
-        float facing = pow(max(vNormal.z, 0.0), .34);
-        vec3 color = mix(vec3(.82, .94, .93), vec3(1.0, .85, .66), cloud);
-        gl_FragColor = vec4(color, alpha * facing * uOpacity);
+        float distanceToCenter = length(gl_PointCoord - vec2(0.5));
+        if (distanceToCenter > 0.5) discard;
+        float core = smoothstep(0.5, 0.0, distanceToCenter);
+        vec3 color = mix(vec3(0.78, 0.88, 1.0), vec3(1.0, 0.93, 0.82), vSeed);
+        gl_FragColor = vec4(color, core * core * vTwinkle * uOpacity);
+        #include <colorspace_fragment>
       }
     `,
   });
+
+  return { points: new THREE.Points(geometry, material), geometry, material };
 }
 
 function createRoute(glowTexture) {
-  const paris = coordinateToVector(PARIS, 2.055);
-  const tirana = coordinateToVector(TIRANA, 2.055);
+  const start = coordinateToVector(PARIS, 1);
+  const end = coordinateToVector(TIRANA, 1);
+  const samples = 128;
   const points = [];
-  const samples = 180;
+  const direction = new THREE.Vector3();
 
   for (let index = 0; index <= samples; index += 1) {
     const progress = index / samples;
-    const point = paris
-      .clone()
-      .lerp(tirana, progress)
-      .normalize()
-      .multiplyScalar(2.055 + Math.sin(progress * Math.PI) * 0.16);
-    points.push(point);
+    slerpDirection(start, end, progress, direction);
+    points.push(
+      direction
+        .clone()
+        .multiplyScalar(EARTH_RADIUS + 0.012 + Math.sin(progress * Math.PI) * 0.075),
+    );
   }
 
   const curve = new THREE.CatmullRomCurve3(points);
-  const routeUniforms = {
+  const uniforms = {
     uProgress: { value: 0 },
-    uOpacity: { value: 1 },
-    uColor: { value: new THREE.Color(0xffc06f) },
+    uOpacity: { value: 0 },
+    uTime: { value: 0 },
   };
 
-  const createRouteMaterial = (opacity) =>
+  const createMaterial = (weight) =>
     new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      uniforms: THREE.UniformsUtils.clone(routeUniforms),
+      uniforms: THREE.UniformsUtils.clone(uniforms),
       vertexShader: `
         varying float vProgress;
         void main() {
@@ -261,94 +429,24 @@ function createRoute(glowTexture) {
       fragmentShader: `
         uniform float uProgress;
         uniform float uOpacity;
-        uniform vec3 uColor;
+        uniform float uTime;
         varying float vProgress;
 
         void main() {
-          float head = smoothstep(uProgress + .018, uProgress - .012, vProgress);
-          float pulse = .68 + .32 * sin(vProgress * 170.0);
-          gl_FragColor = vec4(uColor, head * pulse * uOpacity * ${opacity.toFixed(2)});
+          float drawn = smoothstep(uProgress + 0.008, uProgress - 0.02, vProgress);
+          float head = smoothstep(0.075, 0.0, abs(vProgress - uProgress));
+          float shimmer = 0.82 + 0.18 * sin(vProgress * 90.0 - uTime * 5.0);
+          vec3 color = mix(vec3(1.0, 0.68, 0.36), vec3(1.0, 0.95, 0.78), head);
+          gl_FragColor = vec4(color, drawn * shimmer * (1.0 + head * 1.6) * uOpacity * ${weight.toFixed(2)});
+          #include <colorspace_fragment>
         }
       `,
     });
 
-  const group = new THREE.Group();
-  const glow = new THREE.Mesh(
-    new THREE.TubeGeometry(curve, samples, 0.032, 7, false),
-    createRouteMaterial(0.28),
-  );
-  const core = new THREE.Mesh(
-    new THREE.TubeGeometry(curve, samples, 0.009, 7, false),
-    createRouteMaterial(1),
-  );
-  const particleCount = 140;
-  const particlePositions = new Float32Array(particleCount * 3);
-  const particleProgress = new Float32Array(particleCount);
-  const particleSeeds = new Float32Array(particleCount);
+  const halo = new THREE.Mesh(new THREE.TubeGeometry(curve, samples, 0.042, 6, false), createMaterial(0.24));
+  const core = new THREE.Mesh(new THREE.TubeGeometry(curve, samples, 0.012, 6, false), createMaterial(1));
 
-  for (let index = 0; index < particleCount; index += 1) {
-    const progress = index / (particleCount - 1);
-    const point = curve.getPointAt(progress);
-    particlePositions[index * 3] = point.x;
-    particlePositions[index * 3 + 1] = point.y;
-    particlePositions[index * 3 + 2] = point.z;
-    particleProgress[index] = progress;
-    particleSeeds[index] = ((index * 73) % 97) / 97;
-  }
-
-  const particleGeometry = new THREE.BufferGeometry();
-  particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
-  particleGeometry.setAttribute("aProgress", new THREE.BufferAttribute(particleProgress, 1));
-  particleGeometry.setAttribute("aSeed", new THREE.BufferAttribute(particleSeeds, 1));
-  const particleMaterial = new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    uniforms: {
-      uProgress: { value: 0 },
-      uOpacity: { value: 1 },
-      uTime: { value: 0 },
-      uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-    },
-    vertexShader: `
-      attribute float aProgress;
-      attribute float aSeed;
-      uniform float uProgress;
-      uniform float uOpacity;
-      uniform float uTime;
-      uniform float uPixelRatio;
-      varying float vAlpha;
-      varying float vHeat;
-
-      void main() {
-        float behind = uProgress - aProgress;
-        float trailLife = step(0.0, behind) * smoothstep(.42, .012, behind);
-        float flicker = .62 + .38 * sin(uTime * (7.0 + aSeed * 9.0) + aSeed * 31.0);
-        vec3 displaced = position + normalize(position) * sin(uTime * 2.8 + aSeed * 24.0) * .008;
-        vec4 viewPosition = modelViewMatrix * vec4(displaced, 1.0);
-        gl_Position = projectionMatrix * viewPosition;
-        gl_PointSize = (1.8 + aSeed * 3.4) * uPixelRatio * clamp(7.0 / -viewPosition.z, .72, 2.2);
-        vAlpha = trailLife * flicker * uOpacity;
-        vHeat = aSeed;
-      }
-    `,
-    fragmentShader: `
-      varying float vAlpha;
-      varying float vHeat;
-
-      void main() {
-        float distanceToCenter = distance(gl_PointCoord, vec2(.5));
-        if (distanceToCenter > .5) discard;
-        float glow = smoothstep(.5, .03, distanceToCenter);
-        vec3 color = mix(vec3(1.0, .91, .66), vec3(1.0, .38, .2), vHeat);
-        gl_FragColor = vec4(color, glow * vAlpha);
-      }
-    `,
-  });
-  const particles = new THREE.Points(particleGeometry, particleMaterial);
-  group.add(glow, core, particles);
-
-  const beacon = new THREE.Sprite(
+  const comet = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: glowTexture,
       transparent: true,
@@ -357,180 +455,21 @@ function createRoute(glowTexture) {
       opacity: 0,
     }),
   );
-  beacon.scale.setScalar(0.18);
-  group.add(beacon);
-
-  return {
-    group,
-    curve,
-    core,
-    glow,
-    particles,
-    particleMaterial,
-    beacon,
-    paris,
-    tirana,
-  };
-}
-
-function createCityMarker(position, glowTexture, scale = 0.12) {
-  const sprite = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: glowTexture,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      opacity: 0,
-    }),
-  );
-  sprite.position.copy(position);
-  sprite.scale.setScalar(scale);
-  return sprite;
-}
-
-function pointInsidePolygon(point, polygon) {
-  let inside = false;
-  for (let current = 0, previous = polygon.length - 1; current < polygon.length; previous = current, current += 1) {
-    const [currentX, currentY] = polygon[current];
-    const [previousX, previousY] = polygon[previous];
-    const crosses =
-      currentY > point[1] !== previousY > point[1] &&
-      point[0] < ((previousX - currentX) * (point[1] - currentY)) / (previousY - currentY) + currentX;
-    if (crosses) inside = !inside;
-  }
-  return inside;
-}
-
-function createRelief(glowTexture) {
-  const bounds = ALBANIA_POINTS.reduce(
-    (result, [x, y]) => ({
-      minX: Math.min(result.minX, x),
-      maxX: Math.max(result.maxX, x),
-      minY: Math.min(result.minY, y),
-      maxY: Math.max(result.maxY, y),
-    }),
-    { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
-  );
-  const centerX = (bounds.minX + bounds.maxX) / 2;
-  const centerY = (bounds.minY + bounds.maxY) / 2;
-  const scale = 0.0115;
-  const shape = new THREE.Shape();
-
-  ALBANIA_POINTS.forEach(([x, y], index) => {
-    const mappedX = (x - centerX) * scale;
-    const mappedY = -(y - centerY) * scale;
-    if (index === 0) shape.moveTo(mappedX, mappedY);
-    else shape.lineTo(mappedX, mappedY);
-  });
-  shape.closePath();
-
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: 0.2,
-    bevelEnabled: true,
-    bevelSegments: 3,
-    bevelSize: 0.045,
-    bevelThickness: 0.055,
-    curveSegments: 2,
-    steps: 2,
-  });
-  geometry.computeVertexNormals();
+  comet.scale.setScalar(0.16);
 
   const group = new THREE.Group();
-  const materials = [];
-  const layerColors = [0x4d7f79, 0x63978a, 0x82af93];
+  group.add(halo, core, comet);
 
-  layerColors.forEach((color, index) => {
-    const material = new THREE.MeshStandardMaterial({
-      color,
-      roughness: 0.78,
-      metalness: 0.08,
-      transparent: true,
-      opacity: 0,
-    });
-    materials.push(material);
-    const layer = new THREE.Mesh(geometry, material);
-    layer.position.z = -0.12 - index * 0.09;
-    group.add(layer);
-  });
+  return { group, curve, halo, core, comet };
+}
 
-  const surfaceMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xa3c795,
-    emissive: 0x23453e,
-    emissiveIntensity: 0.18,
-    roughness: 0.6,
-    metalness: 0.08,
-    clearcoat: 0.35,
-    clearcoatRoughness: 0.72,
-    transparent: true,
-    opacity: 0,
-  });
-  materials.push(surfaceMaterial);
-  const surface = new THREE.Mesh(geometry, surfaceMaterial);
-  group.add(surface);
+function createBeacon(coordinates, glowTexture, { scale = 0.13, color = 0xff8a5c } = {}) {
+  const position = coordinateToVector(coordinates, EARTH_RADIUS + 0.006);
+  const group = new THREE.Group();
+  group.position.copy(position);
+  group.lookAt(position.clone().multiplyScalar(2));
 
-  const edgeMaterial = new THREE.LineBasicMaterial({
-    color: 0xffc878,
-    transparent: true,
-    opacity: 0,
-    blending: THREE.AdditiveBlending,
-  });
-  materials.push(edgeMaterial);
-  const edge = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 28), edgeMaterial);
-  edge.position.z = 0.015;
-  group.add(edge);
-
-  const mappedPolygon = ALBANIA_POINTS.map(([x, y]) => [
-    (x - centerX) * scale,
-    -(y - centerY) * scale,
-  ]);
-  const contourMaterial = new THREE.LineBasicMaterial({
-    color: 0xf6edda,
-    transparent: true,
-    opacity: 0,
-    blending: THREE.AdditiveBlending,
-  });
-  materials.push(contourMaterial);
-
-  for (let contour = 0; contour < 13; contour += 1) {
-    const originalY = bounds.minY + 18 + contour * ((bounds.maxY - bounds.minY - 36) / 12);
-    let activeSegment = [];
-    const segments = [];
-
-    for (let sample = 0; sample <= 130; sample += 1) {
-      const originalX = bounds.minX + (sample / 130) * (bounds.maxX - bounds.minX);
-      const waveY = originalY + Math.sin(sample * 0.21 + contour * 0.72) * 4.2;
-      if (pointInsidePolygon([originalX, waveY], ALBANIA_POINTS)) {
-        activeSegment.push(
-          new THREE.Vector3(
-            (originalX - centerX) * scale,
-            -(waveY - centerY) * scale,
-            0.27 + Math.sin(sample * 0.12) * 0.008,
-          ),
-        );
-      } else if (activeSegment.length > 1) {
-        segments.push(activeSegment);
-        activeSegment = [];
-      }
-    }
-    if (activeSegment.length > 1) segments.push(activeSegment);
-
-    segments.forEach((segment) => {
-      const contourLine = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(segment),
-        contourMaterial,
-      );
-      group.add(contourLine);
-    });
-  }
-
-  const markerPosition = new THREE.Vector3(
-    (LLOGARA_COORDINATES.x - centerX) * scale,
-    -(LLOGARA_COORDINATES.y - centerY) * scale,
-    0.36,
-  );
-  const marker = new THREE.Group();
-  marker.position.copy(markerPosition);
-  const markerGlow = new THREE.Sprite(
+  const glow = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: glowTexture,
       transparent: true,
@@ -539,707 +478,359 @@ function createRelief(glowTexture) {
       opacity: 0,
     }),
   );
-  markerGlow.scale.setScalar(0.25);
-  marker.add(markerGlow);
+  glow.scale.setScalar(scale);
+  group.add(glow);
 
   const ringMaterial = new THREE.MeshBasicMaterial({
-    color: 0xf07155,
-    transparent: true,
-    opacity: 0,
-    blending: THREE.AdditiveBlending,
-  });
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.06, 0.073, 48), ringMaterial);
-  marker.add(ring);
-  group.add(marker);
-
-  return {
-    group,
-    materials,
-    surfaceMaterial,
-    edgeMaterial,
-    contourMaterial,
-    marker,
-    markerGlow,
-    ring,
-    ringMaterial,
-    markerPosition,
-    geometry,
-  };
-}
-
-function terrainHeightAt(x, y) {
-  const coastline = -0.16 + Math.sin(y * 1.22) * 0.12 + Math.sin(y * 0.43 + 1.1) * 0.07;
-  const land = clamp01((coastline - x + 0.08) * 4.8);
-  const ridgeCenter = -0.92 + Math.sin(y * 0.72) * 0.12;
-  const ridge = Math.exp(-((x - ridgeCenter) ** 2) * 4.1) * (0.75 + Math.cos(y * 1.35) * 0.16);
-  const secondRidge =
-    Math.exp(-((x + 0.54 - Math.sin(y * 1.1) * 0.08) ** 2) * 8.4) *
-    (0.27 + Math.sin(y * 2.05 + 1.2) * 0.09);
-  const detail =
-    Math.sin(x * 10.7 + y * 4.3) * 0.045 +
-    Math.sin(x * 22.4 - y * 7.1) * 0.022 +
-    Math.cos(x * 7.8 + y * 12.3) * 0.018;
-  const coastShelf = Math.exp(-((x - coastline + 0.1) ** 2) * 18) * 0.1;
-  return land * Math.max(0.015, ridge + secondRidge + detail + coastShelf) - (1 - land) * 0.16;
-}
-
-function createLlogaraTerrain(glowTexture) {
-  const portrait = window.innerWidth < 600;
-  const widthSegments = portrait ? 72 : 104;
-  const heightSegments = portrait ? 104 : 144;
-  const terrainGeometry = new THREE.PlaneGeometry(4.8, 6.8, widthSegments, heightSegments);
-  const positions = terrainGeometry.attributes.position;
-  const colors = new Float32Array(positions.count * 3);
-  const seaDeep = new THREE.Color(0x104f5c);
-  const seaShallow = new THREE.Color(0x348f91);
-  const scrub = new THREE.Color(0x3f6d4e);
-  const pine = new THREE.Color(0x193f32);
-  const rock = new THREE.Color(0x847862);
-  const limestone = new THREE.Color(0xbeb092);
-  const color = new THREE.Color();
-
-  for (let index = 0; index < positions.count; index += 1) {
-    const x = positions.getX(index);
-    const y = positions.getY(index);
-    const height = terrainHeightAt(x, y);
-    positions.setZ(index, height);
-    const coastline = -0.16 + Math.sin(y * 1.22) * 0.12 + Math.sin(y * 0.43 + 1.1) * 0.07;
-    const land = clamp01((coastline - x + 0.08) * 5.4);
-
-    if (land < 0.12) {
-      color.copy(seaDeep).lerp(seaShallow, clamp01((coastline - x + 1.25) * 0.42));
-    } else if (height < 0.22) {
-      color.copy(scrub).lerp(pine, clamp01(height * 3));
-    } else if (height < 0.62) {
-      color.copy(pine).lerp(rock, clamp01((height - 0.2) * 1.9));
-    } else {
-      color.copy(rock).lerp(limestone, clamp01((height - 0.6) * 1.5));
-    }
-
-    const sunlight = 0.8 + Math.sin(x * 5.2 - y * 1.7) * 0.055;
-    color.multiplyScalar(sunlight);
-    colors[index * 3] = color.r;
-    colors[index * 3 + 1] = color.g;
-    colors[index * 3 + 2] = color.b;
-  }
-
-  terrainGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  terrainGeometry.computeVertexNormals();
-
-  const terrainMaterial = new THREE.MeshPhysicalMaterial({
-    vertexColors: true,
-    roughness: 0.82,
-    metalness: 0.01,
-    clearcoat: 0.1,
-    clearcoatRoughness: 0.84,
-    transparent: true,
-    opacity: 0,
-    side: THREE.DoubleSide,
-  });
-  const terrainMesh = new THREE.Mesh(terrainGeometry, terrainMaterial);
-
-  const seaGeometry = new THREE.PlaneGeometry(3.4, 7.2, 1, 1);
-  const seaMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x2d8b91,
-    emissive: 0x0c3c49,
-    emissiveIntensity: 0.16,
-    roughness: 0.2,
-    metalness: 0.04,
-    clearcoat: 1,
-    clearcoatRoughness: 0.14,
-    transparent: true,
-    opacity: 0,
-  });
-  const sea = new THREE.Mesh(seaGeometry, seaMaterial);
-  sea.position.set(0.72, 0, -0.105);
-
-  const roadPoints = [];
-  for (let index = 0; index <= 72; index += 1) {
-    const progress = index / 72;
-    const y = THREE.MathUtils.lerp(-2.75, 2.55, progress);
-    const x =
-      -0.68 +
-      Math.sin(progress * Math.PI * 4.3) * 0.22 +
-      Math.sin(progress * Math.PI * 9.1) * 0.055;
-    roadPoints.push(new THREE.Vector3(x, y, terrainHeightAt(x, y) + 0.038));
-  }
-  const roadCurve = new THREE.CatmullRomCurve3(roadPoints);
-  const roadGeometry = new THREE.TubeGeometry(roadCurve, 180, 0.018, 6, false);
-  const roadMaterial = new THREE.MeshStandardMaterial({
-    color: 0xe8d7b8,
-    emissive: 0x6e4a2f,
-    emissiveIntensity: 0.12,
-    roughness: 0.74,
-    transparent: true,
-    opacity: 0,
-  });
-  const road = new THREE.Mesh(roadGeometry, roadMaterial);
-
-  const vegetationCount = portrait ? 280 : 460;
-  const vegetationPositions = new Float32Array(vegetationCount * 3);
-  let randomState = 104729;
-  const random = () => {
-    randomState = (randomState * 48271) % 2147483647;
-    return randomState / 2147483647;
-  };
-
-  for (let index = 0; index < vegetationCount; index += 1) {
-    const y = -3.25 + random() * 6.5;
-    const x = -2.3 + random() * 1.9;
-    vegetationPositions[index * 3] = x;
-    vegetationPositions[index * 3 + 1] = y;
-    vegetationPositions[index * 3 + 2] = terrainHeightAt(x, y) + 0.03 + random() * 0.035;
-  }
-  const vegetationGeometry = new THREE.BufferGeometry();
-  vegetationGeometry.setAttribute("position", new THREE.BufferAttribute(vegetationPositions, 3));
-  const vegetationMaterial = new THREE.PointsMaterial({
-    color: 0x173f33,
-    size: portrait ? 0.028 : 0.023,
-    sizeAttenuation: true,
+    color,
     transparent: true,
     opacity: 0,
     depthWrite: false,
-  });
-  const vegetation = new THREE.Points(vegetationGeometry, vegetationMaterial);
-
-  const markerPosition = new THREE.Vector3(-0.58, -0.82, terrainHeightAt(-0.58, -0.82) + 0.11);
-  const markerGlow = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: glowTexture,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      opacity: 0,
-    }),
-  );
-  markerGlow.position.copy(markerPosition);
-  markerGlow.scale.setScalar(0.24);
-
-  const ringMaterial = new THREE.MeshBasicMaterial({
-    color: 0xf06f52,
-    transparent: true,
-    opacity: 0,
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
   });
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.055, 0.07, 48), ringMaterial);
-  ring.position.copy(markerPosition);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(scale * 0.34, scale * 0.42, 40), ringMaterial);
+  group.add(ring);
 
-  const group = new THREE.Group();
-  group.add(sea, terrainMesh, vegetation, road, markerGlow, ring);
-  group.rotation.x = -0.82;
-  group.rotation.z = -0.055;
-  group.scale.setScalar(0.88);
-
-  return {
-    group,
-    terrainGeometry,
-    terrainMaterial,
-    seaGeometry,
-    seaMaterial,
-    roadGeometry,
-    roadMaterial,
-    vegetationGeometry,
-    vegetationMaterial,
-    markerGlow,
-    ring,
-    ringMaterial,
-    markerPosition,
-    materials: [terrainMaterial, seaMaterial, roadMaterial, vegetationMaterial],
-  };
+  return { group, glow, ring, ringMaterial, scale, position };
 }
 
-export default function OrbitalScene({ reducedMotion = false, durationScale = 1 }) {
+export default function OrbitalScene({ onReady, onStart }) {
   const mountRef = useRef(null);
+  const readyRef = useRef(onReady);
+  const startRef = useRef(onStart);
+  readyRef.current = onReady;
+  startRef.current = onStart;
 
   useEffect(() => {
-    if (reducedMotion || !mountRef.current) return undefined;
-
-    const mount = mountRef.current;
-    let renderer;
-    let animationFrame;
-    let resizeObserver;
-    let destroyed = false;
-    const disposables = [];
-
-    try {
-      renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        precision: "highp",
-        powerPreference: "high-performance",
-      });
-    } catch {
-      mount.dataset.webgl = "unavailable";
+    if (!mountRef.current) {
+      readyRef.current?.();
       return undefined;
     }
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.innerWidth < 600 ? 1.72 : 2));
+    const mount = mountRef.current;
+    let renderer;
+    let animationFrame = 0;
+    let resizeObserver;
+    let disposed = false;
+    const disposables = [];
+
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    } catch {
+      // Sans contexte WebGL, le repli CSS prend la main et la séquence se
+      // déroule quand même. On sort avant d'incrémenter le compteur de scènes :
+      // il n'y aura pas de nettoyage pour le décrémenter.
+      mount.dataset.webgl = "unavailable";
+      readyRef.current?.();
+      return undefined;
+    }
+
+    liveScenes += 1;
+
+    const portrait = mount.clientWidth / mount.clientHeight < 0.85;
+    const pixelRatio = Math.min(window.devicePixelRatio, portrait ? 1.85 : 2);
+    renderer.setPixelRatio(pixelRatio);
     renderer.setSize(mount.clientWidth, mount.clientHeight, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.28;
-    renderer.autoClear = false;
+    renderer.setClearColor(0x000000, 0);
     renderer.domElement.setAttribute("aria-hidden", "true");
     mount.appendChild(renderer.domElement);
 
-    const spaceScene = new THREE.Scene();
-    const earthScene = new THREE.Scene();
-    const reliefScene = new THREE.Scene();
-    const earthCamera = new THREE.PerspectiveCamera(39, mount.clientWidth / mount.clientHeight, 0.02, 80);
-    const reliefCamera = new THREE.PerspectiveCamera(43, mount.clientWidth / mount.clientHeight, 0.02, 30);
-    reliefCamera.position.set(0, 0, 6.1);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, mount.clientWidth / mount.clientHeight, 0.02, 140);
 
-    const sunTexture = createSunTexture();
-    const sunMaterial = new THREE.SpriteMaterial({
-      map: sunTexture,
-      transparent: true,
-      depthTest: false,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      opacity: 0,
-    });
-    const sunSprite = new THREE.Sprite(sunMaterial);
-    sunSprite.scale.set(5.2, 5.2, 1);
-    sunSprite.renderOrder = -2;
-    spaceScene.add(sunSprite);
-    disposables.push(sunTexture, sunMaterial);
+    const stars = createStarField();
+    stars.material.uniforms.uPixelRatio.value = pixelRatio;
+    scene.add(stars.points);
+    disposables.push(stars.geometry, stars.material);
+
+    const glowTexture = createRadialTexture(128, [
+      [0, "rgba(255,248,226,1)"],
+      [0.14, "rgba(255,196,116,0.96)"],
+      [0.36, "rgba(246,120,78,0.42)"],
+      [1, "rgba(246,120,78,0)"],
+    ]);
+    disposables.push(glowTexture);
 
     const earthGroup = new THREE.Group();
-    earthScene.add(earthGroup);
-    const earthGeometry = new THREE.SphereGeometry(
-      2,
-      window.innerWidth < 600 ? 128 : 192,
-      window.innerWidth < 600 ? 64 : 96,
-    );
-    const earthMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      emissive: 0x173e43,
-      emissiveIntensity: 0.045,
-      roughness: 0.72,
-      metalness: 0.015,
-      clearcoat: 0.13,
-      clearcoatRoughness: 0.48,
-      ior: 1.34,
-      specularIntensity: 0.72,
-      specularColor: new THREE.Color(0x9bd5dc),
-      transparent: true,
-      opacity: 1,
-    });
-    const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-    earthGroup.add(earth);
-    disposables.push(earthGeometry, earthMaterial);
+    scene.add(earthGroup);
 
-    const textureLoader = new THREE.TextureLoader();
-    const applyTexture = (url, onLoad, { color = false } = {}) => {
-      textureLoader.load(
-        url,
-        (texture) => {
-          if (destroyed) {
-            texture.dispose();
-            return;
-          }
-          if (color) texture.colorSpace = THREE.SRGBColorSpace;
-          texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
-          onLoad(texture);
-          disposables.push(texture);
-        },
-        undefined,
-        () => {
-          mount.dataset.texture = "fallback";
-        },
-      );
-    };
+    const route = createRoute(glowTexture);
+    earthGroup.add(route.group);
+    disposables.push(route.halo.geometry, route.halo.material, route.core.geometry, route.core.material, route.comet.material);
 
-    applyTexture(
-      "/images/earth-day-nasa.webp",
-      (texture) => {
-        earthMaterial.map = texture;
-        earthMaterial.needsUpdate = true;
-      },
-      { color: true },
-    );
-    applyTexture("/images/earth-normal.jpg", (texture) => {
-      earthMaterial.normalMap = texture;
-      earthMaterial.normalScale.set(0.62, 0.62);
-      earthMaterial.needsUpdate = true;
+    const parisBeacon = createBeacon(PARIS, glowTexture, { scale: 0.115 });
+    const tiranaBeacon = createBeacon(TIRANA, glowTexture, { scale: 0.135 });
+    const llogaraBeacon = createBeacon(LLOGARA, glowTexture, { scale: 0.1, color: 0xffc46a });
+    [parisBeacon, tiranaBeacon, llogaraBeacon].forEach((beacon) => {
+      earthGroup.add(beacon.group);
+      disposables.push(beacon.glow.material, beacon.ring.geometry, beacon.ringMaterial);
     });
-    applyTexture("/images/earth-specular.jpg", (texture) => {
-      earthMaterial.specularIntensityMap = texture;
-      earthMaterial.needsUpdate = true;
-    });
-
-    earthScene.add(new THREE.HemisphereLight(0xe9fbf8, 0x4d5d56, 1.18));
-    const sunLight = new THREE.DirectionalLight(0xffd7a0, 3.45);
-    sunLight.position.set(-4, 3, 5);
-    earthScene.add(sunLight);
 
     const atmosphereMaterial = createAtmosphereMaterial();
-    const atmosphere = new THREE.Mesh(
-      new THREE.SphereGeometry(2.095, window.innerWidth < 600 ? 112 : 144, window.innerWidth < 600 ? 56 : 72),
-      atmosphereMaterial,
-    );
+    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(EARTH_RADIUS * 1.05, 48, 32), atmosphereMaterial);
+    atmosphere.renderOrder = 2;
     earthGroup.add(atmosphere);
     disposables.push(atmosphere.geometry, atmosphereMaterial);
 
-    const surfaceHazeMaterial = createSurfaceHazeMaterial();
-    const surfaceHaze = new THREE.Mesh(
-      new THREE.SphereGeometry(2.022, window.innerWidth < 600 ? 112 : 144, window.innerWidth < 600 ? 56 : 72),
-      surfaceHazeMaterial,
-    );
-    surfaceHaze.renderOrder = 3;
-    earthGroup.add(surfaceHaze);
-    disposables.push(surfaceHaze.geometry, surfaceHazeMaterial);
-
-    const realCloudMaterial = new THREE.MeshStandardMaterial({
-      color: 0xfff4df,
-      roughness: 0.96,
-      transparent: true,
-      opacity: 0,
-      alphaTest: 0.012,
-      depthWrite: false,
-      side: THREE.FrontSide,
-    });
-    const realCloudShell = new THREE.Mesh(
-      new THREE.SphereGeometry(2.036, window.innerWidth < 600 ? 112 : 144, window.innerWidth < 600 ? 56 : 72),
-      realCloudMaterial,
-    );
-    realCloudShell.renderOrder = 4;
-    earthGroup.add(realCloudShell);
-    disposables.push(realCloudShell.geometry, realCloudMaterial);
-    applyTexture(
-      "/images/earth-clouds.png",
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        realCloudMaterial.map = texture;
-        realCloudMaterial.alphaMap = texture;
-        realCloudMaterial.needsUpdate = true;
-      },
-      { color: true },
-    );
-
-    const cloudMaterials = [createCloudMaterial(0), createCloudMaterial(1)];
-    const cloudShells = cloudMaterials.map((material, index) => {
-      const cloud = new THREE.Mesh(
-        new THREE.SphereGeometry(
-          2.055 + index * 0.032,
-          window.innerWidth < 600 ? 96 : 128,
-          window.innerWidth < 600 ? 48 : 64,
-        ),
-        material,
-      );
-      earthGroup.add(cloud);
-      disposables.push(cloud.geometry, material);
-      return cloud;
-    });
-
-    const glowTexture = createGlowTexture();
-    disposables.push(glowTexture);
-    const route = createRoute(glowTexture);
-    earthGroup.add(route.group);
-    disposables.push(
-      route.core.geometry,
-      route.glow.geometry,
-      route.particles.geometry,
-      route.core.material,
-      route.glow.material,
-      route.particleMaterial,
-      route.beacon.material,
-    );
-
-    const parisMarker = createCityMarker(route.paris, glowTexture, 0.12);
-    const tiranaMarker = createCityMarker(route.tirana, glowTexture, 0.16);
-    earthGroup.add(parisMarker, tiranaMarker);
-    disposables.push(parisMarker.material, tiranaMarker.material);
-
-    const relief = createRelief(glowTexture);
-    reliefScene.add(relief.group);
-    const terrain = createLlogaraTerrain(glowTexture);
-    reliefScene.add(terrain.group);
-    reliefScene.add(new THREE.HemisphereLight(0xedfff7, 0x405a51, 1.16));
-    const reliefKey = new THREE.DirectionalLight(0xffcb80, 3.62);
-    reliefKey.position.set(-3, 4, 6);
-    reliefScene.add(reliefKey);
-    const reliefRim = new THREE.DirectionalLight(0x78d1d3, 1.85);
-    reliefRim.position.set(4, -2, 3);
-    reliefScene.add(reliefRim);
-    disposables.push(
-      relief.geometry,
-      relief.ring.geometry,
-      relief.ringMaterial,
-      relief.markerGlow.material,
-      ...relief.materials,
-      terrain.terrainGeometry,
-      terrain.seaGeometry,
-      terrain.roadGeometry,
-      terrain.vegetationGeometry,
-      terrain.markerGlow.material,
-      terrain.ring.geometry,
-      terrain.ringMaterial,
-      ...terrain.materials,
-    );
-
-    const targetUnit = coordinateToVector({ lat: 43.4, lon: 12.2 }).normalize();
-    const albaniaUnit = coordinateToVector({ lat: 40.6, lon: 19.7 }).normalize();
-    const initialOffset = new THREE.Vector3(-0.28, 0.16, 0.08);
-    const worldUp = new THREE.Vector3(0, 1, 0);
-    const orbitTangent = new THREE.Vector3().crossVectors(targetUnit, worldUp).normalize();
-    const desiredEarthPosition = new THREE.Vector3();
-    const smoothEarthPosition = new THREE.Vector3();
-    const desiredEarthLook = new THREE.Vector3();
-    const smoothEarthLook = new THREE.Vector3();
+    const cameraDirection = new THREE.Vector3();
+    const focusPoint = new THREE.Vector3();
     const sunDirection = new THREE.Vector3();
-    const cameraForward = new THREE.Vector3();
-    const cameraRight = new THREE.Vector3();
-    const cameraUp = new THREE.Vector3();
-    const desiredReliefPosition = new THREE.Vector3();
-    const smoothReliefPosition = new THREE.Vector3(0, 0, 6.1);
-    const desiredReliefLook = new THREE.Vector3();
-    const smoothReliefLook = new THREE.Vector3();
-    let earthCameraReady = false;
-    const portraitOrbit = mount.clientWidth / mount.clientHeight < 0.72;
-    const orbitFar = portraitOrbit ? 16.4 : 7.5;
-    const orbitNear = portraitOrbit ? 13.1 : 5.15;
-    const startedAt = performance.now();
-    let lastRenderedAt = startedAt - 16;
-    let renderedFrames = 0;
+    const viewStart = coordinateToVector({ lat: 45, lon: -2 }).normalize();
+    const viewCruise = coordinateToVector({ lat: 43.5, lon: 10 }).normalize();
+    const viewTarget = coordinateToVector(LLOGARA).normalize();
+
+    const coverageDistance = (coverage) => {
+      const halfVertical = (camera.fov * DEG) / 2;
+      const halfHorizontal = Math.atan(Math.tan(halfVertical) * camera.aspect);
+      const half = Math.min(halfVertical, halfHorizontal);
+      return EARTH_RADIUS / Math.sin(Math.min(half * coverage, 1.4));
+    };
 
     const resize = () => {
       const width = mount.clientWidth;
       const height = mount.clientHeight;
       if (!width || !height) return;
       renderer.setSize(width, height, false);
-      const aspect = width / height;
-      earthCamera.aspect = aspect;
-      reliefCamera.aspect = aspect;
-      earthCamera.updateProjectionMatrix();
-      reliefCamera.updateProjectionMatrix();
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
     };
 
-    resizeObserver = new ResizeObserver(resize);
+    let earth = null;
+    let earthMaterial = null;
+    let clouds = null;
+    let cloudMaterial = null;
+    let startedAt = 0;
+
+    const draw = (time) => {
+      // Soleil au sud-est de l'Europe : lumière rasante du matin, terminateur
+      // visible sur l'Atlantique, villes allumées au-delà.
+      sunDirection
+        .copy(coordinateToVector({ lat: 8.5, lon: 74 + time * 1.9 }))
+        .normalize();
+
+      const fov = track(time, [
+        [0, 38],
+        [4.5, 38, linear],
+        [6.8, 50, easeInOutQuint],
+      ]);
+      if (Math.abs(camera.fov - fov) > 0.005) {
+        camera.fov = fov;
+        camera.updateProjectionMatrix();
+      }
+
+      const approach = clamp01((time - 1.3) / 2.85);
+      const dive = clamp01((time - 4.5) / 2.3);
+      slerpDirection(viewStart, viewCruise, easeInOutCubic(approach), cameraDirection);
+      if (dive > 0) slerpDirection(cameraDirection, viewTarget, easeInOutQuint(dive), cameraDirection);
+
+      // Plan large, puis approche jusqu'à ce que l'Europe remplisse le cadre —
+      // sans quoi les 1 600 km de Paris à Tirana ne font qu'une trentaine de
+      // pixels. La plongée, elle, s'arrête avant que la texture (2048 px pour
+      // 40 000 km) ne devienne floue : le voile atmosphérique et le passage de
+      // nuages prennent le relais jusqu'à l'embrasement.
+      const distance = track(time, [
+        [0, coverageDistance(0.55)],
+        [1.3, coverageDistance(0.74), easeOutCubic],
+        [4.5, coverageDistance(1.95)],
+        [6.8, EARTH_RADIUS + 1.6],
+      ]);
+
+      // Respiration très légère pour éviter le mouvement parfaitement mécanique.
+      const sway = (1 - dive) * 0.012;
+      camera.position
+        .copy(cameraDirection)
+        .multiplyScalar(distance)
+        .addScaledVector(
+          new THREE.Vector3(0, 1, 0),
+          Math.sin(time * 0.62) * sway * distance * 0.16,
+        );
+
+      // Décalage exprimé en fraction de la distance : le globe reste au même
+      // endroit à l'écran quelle que soit l'altitude, au-dessus de la typo.
+      focusPoint.set(0, distance * track(time, [
+        [0, -0.058],
+        [4.5, -0.05, linear],
+        [6.5, 0, easeInOutCubic],
+      ]) * (portrait ? 1 : 0.45), 0);
+
+      camera.up.set(0, 1, 0);
+      camera.lookAt(focusPoint);
+      camera.rotateZ(Math.sin(time * 0.45 + 1.2) * 0.014 * (1 - dive) + dive * 0.05);
+
+      const exposure = track(time, [
+        [0, 0.88],
+        [1.4, 1, easeOutCubic],
+        [5, 1.06, linear],
+        [6.8, 1.55, easeInQuad],
+      ]);
+      const haze = track(time, [
+        [5.3, 0],
+        [6.8, 1, easeInQuad],
+      ]);
+
+      stars.material.uniforms.uTime.value = time;
+      stars.material.uniforms.uOpacity.value = track(time, [
+        [0, 0],
+        [1.5, 0.95, easeOutCubic],
+        [4.6, 0.95, linear],
+        [6, 0, easeInOutCubic],
+      ]);
+
+      if (earthMaterial) {
+        earthMaterial.uniforms.uSunDirection.value.copy(sunDirection);
+        earthMaterial.uniforms.uExposure.value = exposure;
+        earthMaterial.uniforms.uHaze.value = haze;
+        earthMaterial.uniforms.uOpacity.value = track(time, [
+          [0, 0],
+          [0.85, 1, easeOutCubic],
+        ]);
+      }
+
+      if (cloudMaterial) {
+        cloudMaterial.uniforms.uSunDirection.value.copy(sunDirection);
+        cloudMaterial.uniforms.uExposure.value = exposure;
+        cloudMaterial.uniforms.uOpacity.value = track(time, [
+          [0.4, 0],
+          [1.6, 0.92, easeOutCubic],
+        ]);
+        clouds.rotation.y = time * 0.012;
+      }
+
+      atmosphereMaterial.uniforms.uSunDirection.value.copy(sunDirection);
+      atmosphereMaterial.uniforms.uOpacity.value = track(time, [
+        [0, 0],
+        [1, 1, easeOutCubic],
+      ]);
+      atmosphereMaterial.uniforms.uIntensity.value = track(time, [
+        [4.5, 1],
+        [6.8, 2.6, easeInQuad],
+      ]);
+
+      // Départ et arrivée adoucis, mais vitesse de croisière franche : avec un
+      // cubique, l'arc reste quasi immobile pendant la première seconde.
+      const flight = track(time, [
+        [2.4, 0],
+        [4.65, 1, easeInOutSine],
+      ]);
+      // La trajectoire s'efface avant la descente : de trop près, l'arc barre
+      // tout le cadre comme un trait de lumière.
+      const routeOpacity = track(time, [
+        [2.3, 0],
+        [2.7, 1, easeOutCubic],
+        [4.75, 1, linear],
+        [5.4, 0, easeInOutCubic],
+      ]);
+      [route.core.material, route.halo.material].forEach((material) => {
+        material.uniforms.uProgress.value = flight;
+        material.uniforms.uOpacity.value = routeOpacity;
+        material.uniforms.uTime.value = time;
+      });
+      route.comet.position.copy(route.curve.getPointAt(Math.min(flight, 0.9995)));
+      // La tête de comète s'allume au décollage et s'éteint en arrivant, sans
+      // disparaître d'un coup au-dessus de Tirana.
+      const cometFade = clamp01(flight / 0.012) * clamp01((1 - flight) / 0.06);
+      route.comet.material.opacity = routeOpacity * cometFade;
+      route.comet.scale.setScalar(0.15 + Math.sin(time * 13) * 0.02);
+
+      const pulse = (offset) => 1 - ((time * 0.85 + offset) % 1);
+      // Une seule balise pulse à la fois : superposées, leurs anneaux lisent
+      // comme une mire plutôt que comme un repère.
+      const beacons = [
+        [parisBeacon, track(time, [[2, 0], [2.4, 1, easeOutCubic], [4.75, 1, linear], [5.3, 0, easeInOutCubic]]), 0],
+        [tiranaBeacon, track(time, [[4.3, 0], [4.7, 1, easeOutCubic], [4.95, 1, linear], [5.4, 0, easeInOutCubic]]), 0.33],
+        [llogaraBeacon, track(time, [[5.1, 0], [5.5, 1, easeOutCubic], [6.2, 1, linear], [6.7, 0, easeInOutCubic]]), 0.66],
+      ];
+      beacons.forEach(([beacon, visibility, offset]) => {
+        const wave = pulse(offset);
+        beacon.glow.material.opacity = visibility * (0.72 + Math.sin(time * 6 + offset * 9) * 0.2);
+        beacon.glow.scale.setScalar(beacon.scale * (1 + Math.sin(time * 6 + offset * 9) * 0.12));
+        beacon.ringMaterial.opacity = visibility * wave * 0.8;
+        beacon.ring.scale.setScalar(1 + (1 - wave) * 1.7);
+      });
+
+      renderer.render(scene, camera);
+      if (import.meta.env.DEV) mount.dataset.t = time.toFixed(2);
+    };
+
+    const loop = (now) => {
+      const time = Math.min((now - startedAt) / 1000, SCENE_DURATION);
+      draw(time);
+      if (time < SCENE_DURATION) animationFrame = requestAnimationFrame(loop);
+    };
+
+    resizeObserver = new ResizeObserver(() => {
+      resize();
+      // Un changement de taille avant le top départ doit rafraîchir l'image fixe.
+      if (!startedAt && earthMaterial) draw(0);
+    });
     resizeObserver.observe(mount);
 
-    const render = (now) => {
-      if (now - lastRenderedAt < 15.5) {
-        animationFrame = requestAnimationFrame(render);
+    preloadOrbitalAssets().then((loaded) => {
+      if (disposed) return;
+
+      const textures = {};
+      TEXTURE_SOURCES.forEach(([key], index) => {
+        const texture = loaded[index];
+        if (texture) {
+          texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+          texture.needsUpdate = true;
+        }
+        textures[key] = texture;
+      });
+
+      if (!textures.day) {
+        mount.dataset.texture = "fallback";
+        readyRef.current?.();
         return;
       }
-      const deltaSeconds = Math.min((now - lastRenderedAt) / 1000, 0.05);
-      lastRenderedAt = now;
-      const elapsedSeconds = (now - startedAt) / 1000;
-      renderedFrames += 1;
-      if (elapsedSeconds >= 4.5 && !mount.dataset.fps) {
-        mount.dataset.fps = (renderedFrames / elapsedSeconds).toFixed(1);
-      }
-      const seconds = elapsedSeconds / durationScale;
-      const normalized = seconds / 7.25;
-      const entry = easeOutExpo(range(normalized, 0, 0.13));
-      const flight = easeInOutCubic(range(normalized, 0.12, 0.39));
-      const orbitalDive = smootherStep(range(normalized, 0.34, 0.6));
-      const reliefReveal = easeOutExpo(range(normalized, 0.47, 0.61));
-      const mapFade = smootherStep(range(normalized, 0.52, 0.59));
-      const terrainReveal = smootherStep(range(normalized, 0.52, 0.64));
-      const reliefDive = smootherStep(range(normalized, 0.58, 0.79));
-      const coastArrival = smootherStep(range(normalized, 0.67, 0.76));
-      const earthFade = 1 - smootherStep(range(normalized, 0.51, 0.66));
 
-      const earthDistance = THREE.MathUtils.lerp(orbitFar, orbitNear, entry);
-      const diveDistance = THREE.MathUtils.lerp(earthDistance, 2.34, orbitalDive);
-      const cameraDirection = targetUnit.clone().lerp(albaniaUnit, orbitalDive).normalize();
-      cameraDirection
-        .addScaledVector(
-          orbitTangent,
-          Math.sin(normalized * Math.PI) * 0.055 * (1 - orbitalDive) - orbitalDive * 0.018,
-        )
-        .normalize();
-      desiredEarthPosition
-        .copy(cameraDirection)
-        .multiplyScalar(diveDistance)
-        .add(initialOffset.clone().multiplyScalar(1 - orbitalDive));
-      desiredEarthLook
-        .copy(albaniaUnit)
-        .multiplyScalar(THREE.MathUtils.lerp(0, 1.875, smootherStep(orbitalDive)));
+      earthMaterial = createEarthMaterial(textures);
+      earth = new THREE.Mesh(new THREE.SphereGeometry(EARTH_RADIUS, 96, 64), earthMaterial);
+      earthGroup.add(earth);
+      disposables.push(earth.geometry, earthMaterial);
 
-      if (!earthCameraReady) {
-        smoothEarthPosition.copy(desiredEarthPosition);
-        smoothEarthLook.copy(desiredEarthLook);
-        earthCameraReady = true;
-      } else {
-        smoothEarthPosition.lerp(
-          desiredEarthPosition,
-          dampFactor(THREE.MathUtils.lerp(3.7, 6.6, orbitalDive), deltaSeconds),
-        );
-        smoothEarthLook.lerp(
-          desiredEarthLook,
-          dampFactor(THREE.MathUtils.lerp(3.1, 7.4, orbitalDive), deltaSeconds),
-        );
+      if (textures.clouds) {
+        cloudMaterial = createCloudMaterial(textures.clouds);
+        clouds = new THREE.Mesh(new THREE.SphereGeometry(EARTH_RADIUS * 1.008, 64, 48), cloudMaterial);
+        clouds.renderOrder = 1;
+        earthGroup.add(clouds);
+        disposables.push(clouds.geometry, cloudMaterial);
       }
 
-      earthCamera.position.copy(smoothEarthPosition);
-      earthCamera.up.copy(worldUp);
-      earthCamera.lookAt(smoothEarthLook);
-      earthCamera.rotateZ(
-        Math.sin(normalized * Math.PI * 1.1) * 0.018 * (1 - orbitalDive) -
-          orbitalDive * 0.026,
-      );
-      const targetFov = THREE.MathUtils.lerp(39, 46.5, smootherStep(range(normalized, 0.36, 0.63)));
-      if (Math.abs(earthCamera.fov - targetFov) > 0.01) {
-        earthCamera.fov = targetFov;
-        earthCamera.updateProjectionMatrix();
-      }
+      // Première image affichée avant le top départ : la scène est prête,
+      // le parent peut monter les calques DOM et lancer les deux horloges.
+      resize();
+      draw(0);
+      readyRef.current?.();
 
-      cameraForward.subVectors(smoothEarthLook, smoothEarthPosition).normalize();
-      cameraRight.crossVectors(cameraForward, earthCamera.up).normalize();
-      cameraUp.crossVectors(cameraRight, cameraForward).normalize();
-      sunSprite.position
-        .copy(smoothEarthPosition)
-        .addScaledVector(cameraForward, 18)
-        .addScaledVector(cameraRight, portraitOrbit ? 3.25 : 5.4)
-        .addScaledVector(cameraUp, portraitOrbit ? 4.5 : 4.2);
-      const sunVisibility = entry * (1 - smootherStep(range(normalized, 0.42, 0.68)));
-      sunMaterial.opacity = sunVisibility * 0.74;
-      sunSprite.scale.setScalar(
-        THREE.MathUtils.lerp(4.4, 7.2, smootherStep(range(normalized, 0.28, 0.58))),
-      );
-
-      sunDirection
-        .set(
-          -0.62 + Math.sin(seconds * 0.16) * 0.08,
-          0.5 + Math.cos(seconds * 0.12) * 0.035,
-          0.64,
-        )
-        .normalize();
-      sunLight.position.copy(sunDirection).multiplyScalar(8);
-      atmosphereMaterial.uniforms.uSunDirection.value.copy(sunDirection);
-      surfaceHazeMaterial.uniforms.uSunDirection.value.copy(sunDirection);
-      renderer.toneMappingExposure = THREE.MathUtils.lerp(1.23, 1.38, orbitalDive);
-
-      earthGroup.rotation.y = seconds * 0.009;
-      earthGroup.rotation.z = Math.sin(seconds * 0.28) * 0.007;
-      earthMaterial.opacity = earthFade;
-      atmosphereMaterial.uniforms.uOpacity.value = earthFade;
-      surfaceHazeMaterial.uniforms.uOpacity.value = earthFade;
-      realCloudMaterial.opacity = earthFade * 0.48;
-      realCloudShell.rotation.y = seconds * 0.0052;
-      realCloudShell.rotation.z = Math.sin(seconds * 0.11) * 0.004;
-      cloudMaterials.forEach((material, index) => {
-        material.uniforms.uTime.value = seconds * (index === 0 ? 1 : -0.72);
-        material.uniforms.uOpacity.value = earthFade * 0.7;
+      // L'horloge démarre sur l'horodatage de la première image, pas sur
+      // `performance.now()` : les animations CSS s'ancrent elles aussi sur une
+      // frontière d'image, et le montage des calques par le parent peut prendre
+      // plusieurs dizaines de millisecondes entre les deux.
+      animationFrame = requestAnimationFrame((now) => {
+        startedAt = now;
+        startRef.current?.(now);
+        loop(now);
       });
-      cloudShells[0].rotation.y = seconds * 0.0038;
-      cloudShells[1].rotation.y = -seconds * 0.0028;
-
-      route.core.material.uniforms.uProgress.value = flight;
-      route.glow.material.uniforms.uProgress.value = flight;
-      route.core.material.uniforms.uOpacity.value = earthFade;
-      route.glow.material.uniforms.uOpacity.value = earthFade;
-      route.particleMaterial.uniforms.uProgress.value = flight;
-      route.particleMaterial.uniforms.uOpacity.value = earthFade;
-      route.particleMaterial.uniforms.uTime.value = seconds;
-      route.beacon.position.copy(route.curve.getPointAt(Math.min(flight, 0.998)));
-      route.beacon.material.opacity = flight > 0.01 ? earthFade : 0;
-      route.beacon.scale.setScalar(0.15 + Math.sin(seconds * 18) * 0.028);
-
-      parisMarker.material.opacity = range(normalized, 0.09, 0.15) * earthFade;
-      tiranaMarker.material.opacity = range(normalized, 0.32, 0.39) * earthFade;
-      parisMarker.scale.setScalar(0.12 + Math.sin(seconds * 7) * 0.018);
-      tiranaMarker.scale.setScalar(0.16 + Math.sin(seconds * 8 + 1) * 0.026);
-
-      const reliefOpacity = reliefReveal * (1 - mapFade) * (1 - coastArrival);
-      relief.materials.forEach((material) => {
-        material.opacity = reliefOpacity * (material === relief.contourMaterial ? 0.43 : material === relief.edgeMaterial ? 0.8 : 1);
-      });
-      relief.group.visible = reliefOpacity > 0.015;
-      const reliefScale = THREE.MathUtils.lerp(
-        0.46,
-        1.34,
-        smootherStep(range(normalized, 0.48, 0.65)),
-      );
-      relief.group.scale.setScalar(reliefScale);
-      relief.group.rotation.x = THREE.MathUtils.lerp(-0.68, -0.34, terrainReveal);
-      relief.group.rotation.z = THREE.MathUtils.lerp(-0.23, -0.06, terrainReveal);
-      relief.group.position.x = -relief.markerPosition.x * reliefScale * terrainReveal * 0.22;
-      relief.group.position.y = -0.12;
-      relief.group.position.z = THREE.MathUtils.lerp(-0.82, -0.18, terrainReveal);
-
-      relief.markerGlow.material.opacity = reliefOpacity * range(normalized, 0.57, 0.64);
-      relief.ringMaterial.opacity = reliefOpacity * (1 - ((seconds * 0.9) % 1));
-      const ringScale = 1 + ((seconds * 0.9) % 1) * 3.2;
-      relief.ring.scale.setScalar(ringScale);
-      relief.markerGlow.scale.setScalar(0.2 + Math.sin(seconds * 11) * 0.035);
-
-      const terrainOpacity = terrainReveal * (1 - coastArrival);
-      terrain.terrainMaterial.opacity = terrainOpacity;
-      terrain.seaMaterial.opacity = terrainOpacity * 0.92;
-      terrain.roadMaterial.opacity = terrainOpacity * 0.82;
-      terrain.vegetationMaterial.opacity = terrainOpacity * 0.84;
-      terrain.group.visible = terrainOpacity > 0.002;
-      terrain.group.scale.setScalar(THREE.MathUtils.lerp(0.74, 1.24, reliefDive));
-      terrain.group.rotation.x = THREE.MathUtils.lerp(-1.02, -0.56, reliefDive);
-      terrain.group.rotation.z =
-        THREE.MathUtils.lerp(-0.11, 0.018, reliefDive) + Math.sin(seconds * 0.32) * 0.004;
-      terrain.group.position.y = THREE.MathUtils.lerp(0.18, 0.48, reliefDive);
-      terrain.group.position.z = THREE.MathUtils.lerp(-0.45, 0.08, reliefDive);
-      terrain.markerGlow.material.opacity =
-        terrainOpacity * smootherStep(range(normalized, 0.61, 0.7));
-      terrain.markerGlow.scale.setScalar(0.21 + Math.sin(seconds * 10.5) * 0.028);
-      const terrainPulse = (seconds * 0.82) % 1;
-      terrain.ringMaterial.opacity = terrainOpacity * (1 - terrainPulse);
-      terrain.ring.scale.setScalar(1 + terrainPulse * 3.4);
-
-      desiredReliefPosition.set(
-        THREE.MathUtils.lerp(0.16, -0.12, reliefDive),
-        THREE.MathUtils.lerp(0.05, -0.54, reliefDive),
-        THREE.MathUtils.lerp(7.1, 2.72, reliefDive),
-      );
-      desiredReliefLook.set(
-        THREE.MathUtils.lerp(0, -0.18, reliefDive),
-        THREE.MathUtils.lerp(0, -0.3, reliefDive),
-        THREE.MathUtils.lerp(0, 0.12, reliefDive),
-      );
-      smoothReliefPosition.lerp(
-        desiredReliefPosition,
-        dampFactor(THREE.MathUtils.lerp(3.5, 6.2, reliefDive), deltaSeconds),
-      );
-      smoothReliefLook.lerp(
-        desiredReliefLook,
-        dampFactor(THREE.MathUtils.lerp(3.1, 5.8, reliefDive), deltaSeconds),
-      );
-      reliefCamera.position.copy(smoothReliefPosition);
-      reliefCamera.up.copy(worldUp);
-      reliefCamera.lookAt(smoothReliefLook);
-      reliefCamera.rotateZ(THREE.MathUtils.lerp(-0.018, 0.026, reliefDive));
-      const reliefFov = THREE.MathUtils.lerp(43, 51, reliefDive);
-      if (Math.abs(reliefCamera.fov - reliefFov) > 0.01) {
-        reliefCamera.fov = reliefFov;
-        reliefCamera.updateProjectionMatrix();
-      }
-      reliefKey.intensity = THREE.MathUtils.lerp(3.25, 3.95, reliefDive);
-
-      renderer.clear();
-      renderer.render(spaceScene, earthCamera);
-      renderer.clearDepth();
-      renderer.render(earthScene, earthCamera);
-      if (reliefOpacity + terrainOpacity > 0.001) {
-        renderer.clearDepth();
-        renderer.render(reliefScene, reliefCamera);
-      }
-
-      if (normalized < 0.84) animationFrame = requestAnimationFrame(render);
-    };
-
-    animationFrame = requestAnimationFrame(render);
+    });
 
     return () => {
-      destroyed = true;
+      disposed = true;
+      liveScenes -= 1;
       cancelAnimationFrame(animationFrame);
       resizeObserver?.disconnect();
       disposables.forEach((item) => item?.dispose?.());
       renderer.dispose();
       renderer.forceContextLoss();
       renderer.domElement.remove();
+      // Court sursis : un remontage immédiat doit retrouver ses textures.
+      setTimeout(() => {
+        if (liveScenes === 0) releaseOrbitalAssets();
+      }, 600);
     };
-  }, [durationScale, reducedMotion]);
+  }, []);
 
   return (
     <div className="orbital-webgl" ref={mountRef}>

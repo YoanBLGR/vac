@@ -1,4 +1,13 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -32,7 +41,16 @@ import {
 } from "lucide-react";
 import { checklistGroups, days, trip } from "./data/trip";
 
-const OrbitalScene = lazy(() => import("./components/OrbitalScene"));
+const loadOrbitalScene = () => import("./components/OrbitalScene");
+const OrbitalScene = lazy(loadOrbitalScene);
+
+/**
+ * Durée totale de la révélation, en millisecondes. Doit rester alignée sur la
+ * timeline CSS de `.reveal-orbital` (src/styles.css) et sur `SCENE_DURATION`
+ * dans `OrbitalScene`. Le décompte ne démarre qu'une fois la scène prête.
+ */
+const REVEAL_DURATION = 10700;
+const REVEAL_STAGE_TIMEOUT = 3000;
 
 const navItems = [
   { id: "home", label: "Voyage", icon: Compass },
@@ -176,6 +194,23 @@ function BirthdaySequence({ onDone }) {
     return () => clearTimeout(timer);
   }, [onDone, reducedMotion]);
 
+  // Le chunk three.js, les textures de la Terre et l'illustration finale se
+  // chargent pendant ce plan. Sans ce décodage anticipé, l'apparition de la
+  // côte provoque un à-coup au moment le plus important de la séquence.
+  useEffect(() => {
+    if (reducedMotion) return;
+    let cancelled = false;
+    loadOrbitalScene().then((module) => {
+      if (!cancelled) module.preloadOrbitalAssets?.();
+    });
+    const coast = new Image();
+    coast.src = "/images/albanian-riviera.webp";
+    coast.decode?.().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [reducedMotion]);
+
   return (
     <main className="birthday-sequence" id="main-content" aria-live="polite">
       <button className="birthday-sequence__skip" type="button" onClick={onDone}>
@@ -207,52 +242,89 @@ function BirthdaySequence({ onDone }) {
 }
 
 function RevealSequence({ onDone }) {
-  const revealRef = useRef(null);
   const reducedMotion = useMemo(
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     [],
   );
+  // La scène 3D et les calques de texte partagent une seule horloge : rien ne
+  // démarre tant que la première image n'est pas rendue.
+  const rootRef = useRef(null);
+  const originRef = useRef(null);
+  const gaveUpRef = useRef(false);
+  // En mouvement réduit il n'y a pas de scène à attendre : la séquence est
+  // réduite à son image finale.
+  const [staged, setStaged] = useState(reducedMotion);
+  const stage = useCallback(() => setStaged(true), []);
+
+  // La scène annonce l'horodatage exact de sa première image. On y aligne le
+  // départ de toutes les animations CSS : le commit React qui pose
+  // `.is-running` peut arriver quelques images plus tôt ou plus tard, et c'est
+  // ce décalage qui désynchronisait les textes de la 3D.
+  const alignTimeline = useCallback(() => {
+    const node = rootRef.current;
+    if (!node || originRef.current === null || !node.classList.contains("is-running")) return;
+    const startTime = originRef.current - (performance.now() - document.timeline.currentTime);
+    node.getAnimations({ subtree: true }).forEach((animation) => {
+      animation.startTime = startTime;
+    });
+  }, []);
+
+  const handleStart = useCallback(
+    (origin) => {
+      // Après le filet de sécurité, on ne recale plus : mieux vaut un léger
+      // décalage qu'un texte rejoué depuis le début.
+      if (gaveUpRef.current) return;
+      originRef.current = origin;
+      alignTimeline();
+    },
+    [alignTimeline],
+  );
+
+  // Filet de sécurité si la scène ne signale jamais qu'elle est prête.
+  useEffect(() => {
+    if (staged || reducedMotion) return undefined;
+    const timer = setTimeout(() => {
+      gaveUpRef.current = true;
+      setStaged(true);
+    }, REVEAL_STAGE_TIMEOUT);
+    return () => clearTimeout(timer);
+  }, [reducedMotion, staged]);
+
+  useLayoutEffect(alignTimeline, [alignTimeline, staged]);
 
   useEffect(() => {
-    const timingFrame = reducedMotion
-      ? null
-      : requestAnimationFrame(() => {
-          revealRef.current?.getAnimations({ subtree: true }).forEach((animation) => {
-            if (typeof animation.updatePlaybackRate === "function") {
-              animation.updatePlaybackRate(0.5);
-            } else {
-              animation.playbackRate = 0.5;
-            }
-          });
-        });
-    const timer = setTimeout(onDone, reducedMotion ? 700 : 15200);
-
-    return () => {
-      if (timingFrame !== null) cancelAnimationFrame(timingFrame);
-      clearTimeout(timer);
-    };
-  }, [onDone, reducedMotion]);
+    if (reducedMotion) {
+      const timer = setTimeout(onDone, 700);
+      return () => clearTimeout(timer);
+    }
+    if (!staged) return undefined;
+    const timer = setTimeout(onDone, REVEAL_DURATION);
+    return () => clearTimeout(timer);
+  }, [onDone, reducedMotion, staged]);
 
   return (
     <main
-      className="reveal-sequence reveal-orbital"
+      className={`reveal-sequence reveal-orbital${staged ? " is-running" : ""}`}
       id="main-content"
       aria-live="polite"
-      ref={revealRef}
+      ref={rootRef}
     >
       <button className="reveal-sequence__skip" type="button" onClick={onDone}>
         Passer
       </button>
 
       <div className="orbital-stage" aria-hidden="true">
-        <span className="orbital-stage__fallback" />
-        <Suspense fallback={<span className="orbital-stage__loading" />}>
-          <OrbitalScene reducedMotion={reducedMotion} durationScale={2} />
-        </Suspense>
+        <span className="orbital-stage__sky" />
+        {!reducedMotion && (
+          <Suspense fallback={null}>
+            <OrbitalScene onReady={stage} onStart={handleStart} />
+          </Suspense>
+        )}
+        <span className="orbital-stage__dawn" />
+        <span className="orbital-stage__haze" />
+        <span className="orbital-stage__cloudpass" />
         <span className="orbital-stage__vignette" />
         <span className="orbital-stage__grain" />
-        <span className="orbital-stage__scan" />
-        <span className="orbital-stage__cloudpass" />
       </div>
 
       <div className="orbital-hud" aria-hidden="true">

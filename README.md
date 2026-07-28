@@ -19,6 +19,18 @@ Ouvrir ensuite l’adresse affichée par Vite.
 
 La révélation est mémorisée dans le navigateur. Pour repartir de zéro, supprimer la clé `albania-trip-revealed` dans le stockage local du site.
 
+## Régler la séquence de révélation
+
+La révélation superpose deux horloges : la scène WebGL ([`src/components/OrbitalScene.jsx`](./src/components/OrbitalScene.jsx)) et les calques de texte animés en CSS (bloc `.reveal-orbital` de [`src/styles.css`](./src/styles.css)). Elles partent ensemble : la scène prévient le parent dès que sa première image est rendue, puis lui transmet l’horodatage exact de son départ, sur lequel toutes les animations CSS sont recalées.
+
+Trois valeurs doivent donc rester cohérentes quand on retouche le minutage :
+
+- `SCENE_DURATION` dans `OrbitalScene.jsx` — la 3D s’arrête dès que la photo la recouvre ;
+- les délais du bloc `.reveal-orbital` dans `styles.css`, écrits en secondes réelles ;
+- `REVEAL_DURATION` dans [`src/App.jsx`](./src/App.jsx) — la durée totale avant de basculer sur le carnet.
+
+Les textures de la Terre et l’illustration finale sont préchargées pendant l’écran d’anniversaire : sans cela, la séquence démarre sur un temps mort et la côte apparaît avec un à-coup.
+
 ## Compléter le programme
 
 Toutes les informations du voyage sont centralisées dans [`src/data/trip.js`](./src/data/trip.js).
@@ -54,6 +66,7 @@ Le service worker met automatiquement en cache l’interface, les polices, les i
 ## Assets
 
 - Illustration finale : [`public/images/albanian-riviera.webp`](./public/images/albanian-riviera.webp)
+- Textures de la Terre : `earth-day-nasa.webp` (couleur), `earth-night.webp` (lumières des villes), `earth-clouds.webp` (couverture nuageuse, niveaux de gris) et `earth-ocean.webp` (masque des océans, blanc = eau). Les deux derniers ne sont pas des couleurs : ils sont chargés sans conversion sRGB.
 - Icônes PWA : [`public/icons/`](./public/icons/)
 - Régénérer les icônes : `npm run icons`
 - Réoptimiser l’illustration depuis un PNG source : `npm run assets`

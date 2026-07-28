@@ -1174,25 +1174,59 @@ h3 {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Révélation orbitale.
+
+   La timeline est écrite en secondes réelles et démarre uniquement lorsque la
+   scène WebGL a rendu sa première image : `.is-running` libère toutes les
+   animations d'un coup, en même temps que l'horloge de `OrbitalScene`.
+   Toute modification de calage doit rester cohérente avec `SCENE_DURATION`
+   (src/components/OrbitalScene.jsx) et `REVEAL_DURATION` (src/App.jsx).
+
+   0.0s  décollage : le ciel de l'aube s'ouvre sur l'espace
+   1.4s  la Terre s'installe, les étoiles apparaissent
+   2.0s  la trajectoire Paris → Tirana se trace
+   4.1s  descente : le cadre plonge vers l'Adriatique
+   6.4s  entrée atmosphérique, embrasement
+   6.9s  fondu sur la côte
+   9.0s  titre final
+   11.0s fin
+   --------------------------------------------------------------------------- */
+
 .reveal-orbital {
   isolation: isolate;
   display: block;
   min-height: 100svh;
   overflow: hidden;
-  background: oklch(89% 0.06 207);
-  color: oklch(25% 0.055 204);
+  background: oklch(12% 0.04 236);
+  color: oklch(94% 0.015 200);
   contain: strict;
-  animation: orbital-finale 420ms 7.08s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  animation: orbital-finale 480ms 10.2s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+/* Tout reste figé tant que la scène n'a pas donné le top départ. */
+.reveal-orbital,
+.reveal-orbital *,
+.reveal-orbital *::before,
+.reveal-orbital *::after {
+  animation-play-state: paused;
+}
+
+.reveal-orbital.is-running,
+.reveal-orbital.is-running *,
+.reveal-orbital.is-running *::before,
+.reveal-orbital.is-running *::after {
+  animation-play-state: running;
 }
 
 .reveal-orbital .reveal-sequence__skip {
   z-index: 60;
   top: max(var(--space-md), env(safe-area-inset-top));
   right: max(var(--space-md), env(safe-area-inset-right));
-  border: 1px solid oklch(34% 0.06 202 / 0.2);
+  border: 1px solid oklch(88% 0.03 200 / 0.24);
   border-radius: 999px;
-  background: oklch(99% 0.012 82 / 0.66);
-  color: oklch(30% 0.055 203);
+  background: oklch(22% 0.045 226 / 0.42);
+  color: oklch(94% 0.018 90);
   backdrop-filter: blur(0.75rem);
   transition:
     border-color 180ms var(--ease-out-quart),
@@ -1201,8 +1235,8 @@ h3 {
 }
 
 .reveal-orbital .reveal-sequence__skip:hover {
-  border-color: oklch(66% 0.14 51 / 0.62);
-  background: oklch(100% 0 0 / 0.9);
+  border-color: oklch(76% 0.14 55 / 0.7);
+  background: oklch(26% 0.05 226 / 0.62);
 }
 
 .reveal-orbital .reveal-sequence__skip:active {
@@ -1211,11 +1245,12 @@ h3 {
 
 .orbital-stage,
 .orbital-webgl,
-.orbital-stage__fallback,
-.orbital-stage__loading,
+.orbital-webgl__fallback,
+.orbital-stage__sky,
+.orbital-stage__dawn,
+.orbital-stage__haze,
 .orbital-stage__vignette,
 .orbital-stage__grain,
-.orbital-stage__scan,
 .orbital-stage__cloudpass,
 .orbital-coast,
 .orbital-coast img,
@@ -1231,42 +1266,22 @@ h3 {
   overflow: hidden;
 }
 
-.orbital-stage__fallback,
-.orbital-webgl__fallback {
+/* Fond d'espace, toujours présent sous le canvas transparent. */
+.orbital-stage__sky {
   background:
-    radial-gradient(circle at 78% 18%, oklch(99% 0.09 85 / 0.96), transparent 18%),
-    radial-gradient(ellipse at 22% 78%, oklch(71% 0.1 198 / 0.4), transparent 44%),
-    radial-gradient(circle at 16% 20%, oklch(99% 0.035 82 / 0.62) 0 1.2px, transparent 1.8px),
-    radial-gradient(circle at 72% 38%, oklch(73% 0.13 55 / 0.26) 0 1.2px, transparent 1.8px),
-    linear-gradient(155deg, oklch(84% 0.085 203), oklch(96% 0.04 84) 66%, oklch(89% 0.085 61));
-  background-size:
-    auto,
-    auto,
-    6.8rem 6.8rem,
-    9.4rem 9.4rem,
-    auto;
+    radial-gradient(88% 52% at 78% 14%, oklch(56% 0.13 68 / 0.5), transparent 62%),
+    radial-gradient(120% 90% at 20% 96%, oklch(30% 0.07 216 / 0.72), transparent 68%),
+    linear-gradient(172deg, oklch(11% 0.04 254), oklch(9% 0.035 232) 52%, oklch(15% 0.045 214));
 }
 
-.orbital-stage__loading {
-  z-index: 1;
-  display: grid;
-  width: 7rem;
-  height: 7rem;
-  margin: auto;
-  border: 1px solid oklch(42% 0.07 193 / 0.18);
-  border-radius: 50%;
-  place-self: center;
-  animation: orbital-loading 1.2s linear infinite;
-}
-
-.orbital-stage__loading::after {
-  width: 0.42rem;
-  height: 0.42rem;
-  margin: -0.21rem auto 0;
-  border-radius: 50%;
-  background: var(--sun);
-  box-shadow: 0 0 1.1rem var(--sun);
-  content: "";
+/* Ciel d'aube hérité de l'écran précédent, qui s'efface pendant la montée. */
+.orbital-stage__dawn {
+  z-index: 3;
+  background:
+    radial-gradient(84% 48% at 76% 12%, oklch(98% 0.09 88 / 0.92), transparent 58%),
+    linear-gradient(168deg, oklch(87% 0.075 205), oklch(95% 0.045 90) 60%, oklch(91% 0.08 62));
+  pointer-events: none;
+  animation: orbital-dawn-lift 2.3s var(--ease-out-quart) forwards;
 }
 
 .orbital-webgl {
@@ -1279,17 +1294,76 @@ h3 {
   height: 100%;
 }
 
-.orbital-stage__vignette {
-  z-index: 4;
+/* Repli discret quand WebGL ou les textures manquent à l'appel. */
+.orbital-webgl__fallback {
   background:
-    radial-gradient(circle at 50% 44%, transparent 35%, oklch(47% 0.07 202 / 0.14) 88%),
-    linear-gradient(180deg, oklch(100% 0 0 / 0.1), transparent 23%, transparent 73%, oklch(70% 0.09 66 / 0.18));
+    radial-gradient(46% 30% at 50% 46%, oklch(52% 0.09 208 / 0.85), oklch(28% 0.06 220 / 0.5) 62%, transparent 74%),
+    radial-gradient(52% 34% at 50% 46%, transparent 58%, oklch(72% 0.11 210 / 0.28) 66%, transparent 76%);
+  opacity: 0;
+}
+
+.orbital-webgl[data-webgl="unavailable"] .orbital-webgl__fallback,
+.orbital-webgl[data-texture="fallback"] .orbital-webgl__fallback {
+  opacity: 1;
+}
+
+/* Voile chaud de l'entrée atmosphérique. */
+.orbital-stage__haze {
+  z-index: 7;
+  background:
+    radial-gradient(126% 80% at 50% 96%, oklch(90% 0.1 72 / 0.72), transparent 66%),
+    linear-gradient(0deg, oklch(94% 0.07 78 / 0.34), transparent 46%);
+  opacity: 0;
+  pointer-events: none;
+  animation: orbital-haze 1.5s 5.35s cubic-bezier(0.55, 0, 0.85, 0.35) forwards;
+}
+
+/* Pas de `overflow: hidden` ici : les ellipses floutées débordent de la boîte,
+   et la boîte est translatée — le clip laisserait une arête bien droite en
+   travers du cadre. `.orbital-stage` se charge déjà du débordement. */
+.orbital-stage__cloudpass {
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(-16%, 11%, 0) scale(1.2);
+  animation: orbital-cloud-pass 2.3s 4.75s cubic-bezier(0.5, 0, 0.4, 1) both;
+}
+
+.orbital-stage__cloudpass::before,
+.orbital-stage__cloudpass::after {
+  position: absolute;
+  width: 96%;
+  height: 60%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 48% 56%, oklch(99% 0.02 84 / 0.94), oklch(92% 0.05 196 / 0.34) 46%, transparent 72%);
+  content: "";
+  filter: blur(1.7rem);
+}
+
+.orbital-stage__cloudpass::before {
+  top: 3%;
+  left: -32%;
+  transform: rotate(-13deg);
+}
+
+.orbital-stage__cloudpass::after {
+  right: -34%;
+  bottom: 1%;
+  transform: rotate(11deg) scale(1.08);
+}
+
+.orbital-stage__vignette {
+  z-index: 9;
+  background:
+    radial-gradient(circle at 50% 46%, transparent 38%, oklch(8% 0.03 232 / 0.42) 92%),
+    linear-gradient(180deg, oklch(8% 0.03 232 / 0.3), transparent 22%, transparent 74%, oklch(8% 0.03 232 / 0.34));
   pointer-events: none;
 }
 
 .orbital-stage__grain {
-  z-index: 5;
-  opacity: 0.08;
+  z-index: 10;
+  opacity: 0.055;
   pointer-events: none;
 }
 
@@ -1297,8 +1371,8 @@ h3 {
   position: absolute;
   inset: -50%;
   background-image:
-    radial-gradient(circle, oklch(100% 0 0 / 0.36) 0 0.7px, transparent 0.9px),
-    radial-gradient(circle, oklch(36% 0.05 194 / 0.24) 0 0.6px, transparent 0.8px);
+    radial-gradient(circle, oklch(100% 0 0 / 0.4) 0 0.7px, transparent 0.9px),
+    radial-gradient(circle, oklch(36% 0.05 194 / 0.26) 0 0.6px, transparent 0.8px);
   background-position:
     0 0,
     0.17rem 0.31rem;
@@ -1306,49 +1380,7 @@ h3 {
     0.27rem 0.27rem,
     0.39rem 0.39rem;
   content: "";
-  animation: orbital-grain 260ms steps(2, jump-none) infinite;
-}
-
-.orbital-stage__scan {
-  z-index: 6;
-  background: linear-gradient(180deg, transparent, oklch(75% 0.13 57 / 0.1) 50%, transparent);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-100%);
-  animation: orbital-scan 1.45s 2.94s var(--ease-out-quart) forwards;
-}
-
-.orbital-stage__cloudpass {
-  z-index: 8;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate3d(-14%, 9%, 0) scale(1.18);
-  animation: orbital-cloud-pass 1.72s 3.52s cubic-bezier(0.65, 0, 0.35, 1) both;
-}
-
-.orbital-stage__cloudpass::before,
-.orbital-stage__cloudpass::after {
-  position: absolute;
-  width: 94%;
-  height: 58%;
-  border-radius: 50%;
-  background:
-    radial-gradient(ellipse at 48% 56%, oklch(99% 0.025 84 / 0.92), oklch(93% 0.055 194 / 0.32) 48%, transparent 73%);
-  content: "";
-  filter: blur(1.6rem);
-}
-
-.orbital-stage__cloudpass::before {
-  top: 4%;
-  left: -31%;
-  transform: rotate(-13deg);
-}
-
-.orbital-stage__cloudpass::after {
-  right: -33%;
-  bottom: 2%;
-  transform: rotate(11deg) scale(1.08);
+  animation: orbital-grain 280ms steps(2, jump-none) infinite;
 }
 
 .orbital-hud {
@@ -1361,12 +1393,11 @@ h3 {
   align-items: flex-start;
   justify-content: space-between;
   padding-right: 5.2rem;
-  color: oklch(31% 0.055 202);
   opacity: 0;
   pointer-events: none;
   animation:
-    orbital-hud-arrive 420ms 160ms var(--ease-out-expo) forwards,
-    orbital-hud-leave 300ms 5.12s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-fade-in 460ms 0.3s var(--ease-out-expo) forwards,
+    orbital-fade-out 320ms 6.05s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
 .orbital-hud__signal {
@@ -1380,7 +1411,7 @@ h3 {
   height: 0.46rem;
   border-radius: 50%;
   background: var(--coral);
-  box-shadow: 0 0 0 0 oklch(65% 0.16 34 / 0.55);
+  box-shadow: 0 0 0 0 oklch(65% 0.16 34 / 0.6);
   animation: orbital-signal 1.6s ease-out infinite;
 }
 
@@ -1391,7 +1422,7 @@ h3 {
 }
 
 .orbital-hud small {
-  color: oklch(43% 0.075 196);
+  color: oklch(72% 0.06 198);
   font-size: 0.52rem;
   font-weight: 720;
   letter-spacing: 0.13em;
@@ -1399,7 +1430,7 @@ h3 {
 }
 
 .orbital-hud strong {
-  color: oklch(27% 0.055 203);
+  color: oklch(93% 0.02 90);
   font-size: 0.64rem;
   font-variant-numeric: tabular-nums;
   font-weight: 620;
@@ -1420,20 +1451,21 @@ h3 {
   justify-items: start;
   gap: var(--space-xs);
   max-width: 18rem;
-  color: oklch(25% 0.06 203);
+  color: oklch(96% 0.016 88);
   opacity: 0;
   pointer-events: none;
   transform: translateY(1rem);
   animation:
-    orbital-copy-arrive 520ms 420ms var(--ease-out-expo) forwards,
-    orbital-copy-leave 260ms 1.25s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-copy-arrive 620ms 0.55s var(--ease-out-expo) forwards,
+    orbital-copy-leave 300ms 2.15s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  text-shadow: 0 0.1rem 1.4rem oklch(10% 0.035 232 / 0.68);
 }
 
 .orbital-opening span,
 .orbital-route-card__kicker,
 .orbital-descent__kicker,
 .orbital-coast-copy span {
-  color: oklch(60% 0.18 43);
+  color: oklch(78% 0.15 52);
   font-size: 0.6rem;
   font-weight: 760;
   letter-spacing: 0.2em;
@@ -1458,14 +1490,15 @@ h3 {
   display: grid;
   gap: var(--space-sm);
   padding: var(--space-md) 0 0;
-  border-top: 1px solid oklch(39% 0.07 193 / 0.25);
-  color: oklch(25% 0.06 203);
+  border-top: 1px solid oklch(84% 0.04 198 / 0.28);
+  color: oklch(96% 0.016 88);
   opacity: 0;
   pointer-events: none;
   transform: translateY(1rem);
   animation:
-    orbital-copy-arrive 480ms 1.52s var(--ease-out-expo) forwards,
-    orbital-copy-leave 260ms 3.08s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-copy-arrive 560ms 2.5s var(--ease-out-expo) forwards,
+    orbital-copy-leave 300ms 4.75s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  text-shadow: 0 0.1rem 1.3rem oklch(10% 0.035 232 / 0.6);
 }
 
 .orbital-route-card > div {
@@ -1487,17 +1520,17 @@ h3 {
   display: flex;
   align-items: center;
   height: 1rem;
-  color: oklch(63% 0.18 45);
+  color: oklch(80% 0.15 52);
 }
 
 .orbital-route-card__line::before {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, oklch(49% 0.1 190 / 0.55), oklch(65% 0.18 49));
+  background: linear-gradient(90deg, oklch(70% 0.08 196 / 0.5), oklch(80% 0.15 52));
   content: "";
   transform: scaleX(0);
   transform-origin: left;
-  animation: orbital-route-line 820ms 1.67s var(--ease-out-expo) forwards;
+  animation: orbital-route-line 980ms 2.75s var(--ease-out-expo) forwards;
 }
 
 .orbital-route-card__line i {
@@ -1506,8 +1539,8 @@ h3 {
   width: 0.35rem;
   height: 0.35rem;
   border-radius: 50%;
-  background: var(--coral);
-  box-shadow: 0 0 1rem var(--coral);
+  background: var(--sun);
+  box-shadow: 0 0 1rem var(--sun);
 }
 
 .orbital-route-card__line svg {
@@ -1515,11 +1548,11 @@ h3 {
   right: 0;
   opacity: 0;
   transform: translateX(-4.3rem) rotate(90deg);
-  animation: orbital-route-plane 820ms 1.67s var(--ease-out-expo) forwards;
+  animation: orbital-route-plane 980ms 2.75s var(--ease-out-expo) forwards;
 }
 
 .orbital-route-card small {
-  color: oklch(42% 0.065 193);
+  color: oklch(74% 0.05 196);
   font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.12em;
@@ -1534,14 +1567,14 @@ h3 {
   left: var(--space-lg);
   display: grid;
   justify-items: start;
-  color: oklch(96% 0.018 82);
+  color: oklch(97% 0.015 84);
   opacity: 0;
   pointer-events: none;
   transform: translateY(1rem);
   animation:
-    orbital-descent-arrive 460ms 3.24s var(--ease-out-expo) forwards,
-    orbital-descent-leave 260ms 5.02s cubic-bezier(0.7, 0, 0.84, 0) forwards;
-  text-shadow: 0 0.12rem 1.25rem oklch(16% 0.045 204 / 0.54);
+    orbital-copy-arrive 520ms 4.85s var(--ease-out-expo) forwards,
+    orbital-descent-leave 300ms 6.05s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  text-shadow: 0 0.14rem 1.5rem oklch(12% 0.04 220 / 0.72);
 }
 
 .orbital-descent > strong {
@@ -1556,7 +1589,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  color: oklch(93% 0.026 82);
+  color: oklch(94% 0.024 82);
   font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
@@ -1566,7 +1599,7 @@ h3 {
 .orbital-descent > div i {
   width: 2.7rem;
   height: 1px;
-  background: var(--coral);
+  background: var(--sun);
 }
 
 .orbital-altitude {
@@ -1578,15 +1611,16 @@ h3 {
   height: 43%;
   grid-template-rows: auto 1fr auto;
   justify-items: center;
-  color: oklch(31% 0.055 202);
+  color: oklch(88% 0.025 196);
   font-size: 0.5rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
   opacity: 0;
   pointer-events: none;
+  text-shadow: 0 0.1rem 0.9rem oklch(10% 0.035 232 / 0.7);
   animation:
-    orbital-altitude-arrive 260ms 3.1s var(--ease-out-quart) forwards,
-    orbital-hud-leave 260ms 5.08s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-fade-in 300ms 4.35s var(--ease-out-quart) forwards,
+    orbital-fade-out 280ms 6.05s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
 .orbital-altitude > i {
@@ -1595,7 +1629,7 @@ h3 {
   height: 100%;
   margin-block: var(--space-xs);
   overflow: hidden;
-  background: oklch(42% 0.08 190 / 0.28);
+  background: oklch(80% 0.05 196 / 0.28);
 }
 
 .orbital-altitude b {
@@ -1603,15 +1637,15 @@ h3 {
   inset: 0;
   background: linear-gradient(var(--sun), var(--coral));
   transform: translateY(-100%);
-  animation: orbital-altitude-drop 1.72s 3.26s var(--ease-out-quart) forwards;
+  animation: orbital-altitude-drop 2.1s 4.5s var(--ease-out-quart) forwards;
 }
 
 .orbital-coast {
   z-index: 30;
   overflow: hidden;
   opacity: 0;
-  transform: scale(1.025);
-  animation: orbital-coast-arrive 1.32s 5.02s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  transform: scale(1.03);
+  animation: orbital-coast-arrive 1.35s 6.5s cubic-bezier(0.5, 0, 0.35, 1) forwards;
 }
 
 .orbital-coast img {
@@ -1619,22 +1653,23 @@ h3 {
   height: 100%;
   object-fit: cover;
   object-position: center 60%;
-  transform: scale(1.17) translate3d(-2.5%, 3%, 0);
-  animation: orbital-coast-camera 2.32s 5.02s var(--ease-out-quart) forwards;
+  transform: scale(1.16) translate3d(-2.2%, 2.6%, 0);
+  animation: orbital-coast-camera 3.4s 6.5s var(--ease-out-quart) forwards;
 }
 
 .orbital-coast__veil {
   background:
-    linear-gradient(180deg, oklch(8% 0.025 214 / 0.02), oklch(8% 0.025 214 / 0.58)),
+    linear-gradient(180deg, oklch(8% 0.025 214 / 0.02), oklch(8% 0.025 214 / 0.6)),
     linear-gradient(90deg, oklch(8% 0.025 214 / 0.26), transparent 72%);
 }
 
 .orbital-coast__flare {
+  z-index: 31;
   background:
-    radial-gradient(circle at 50% 46%, oklch(98% 0.085 82 / 0.94), oklch(91% 0.1 62 / 0.3) 26%, transparent 58%);
+    radial-gradient(circle at 50% 46%, oklch(99% 0.07 84 / 0.98), oklch(93% 0.1 62 / 0.4) 28%, transparent 62%);
   mix-blend-mode: screen;
   opacity: 0;
-  animation: orbital-flare 1.08s 4.91s cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation: orbital-flare 1.4s 6.05s cubic-bezier(0.5, 0, 0.35, 1) both;
 }
 
 .orbital-coast-copy {
@@ -1650,8 +1685,9 @@ h3 {
   pointer-events: none;
   transform: translateY(1.2rem);
   animation:
-    orbital-copy-arrive 520ms 5.42s var(--ease-out-expo) forwards,
-    orbital-copy-leave 250ms 6.24s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-copy-arrive 580ms 7.45s var(--ease-out-expo) forwards,
+    orbital-copy-leave 280ms 8.55s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  text-shadow: 0 0.14rem 1.5rem oklch(10% 0.03 220 / 0.6);
 }
 
 .orbital-coast-copy strong {
@@ -1680,7 +1716,7 @@ h3 {
 .orbital-destination > div {
   opacity: 0;
   transform: translateY(0.9rem);
-  animation: orbital-destination-arrive 520ms var(--ease-out-expo) forwards;
+  animation: orbital-copy-arrive 560ms var(--ease-out-expo) forwards;
 }
 
 .orbital-destination p {
@@ -1689,7 +1725,7 @@ h3 {
   font-weight: 750;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  animation-delay: 6.34s;
+  animation-delay: 8.65s;
 }
 
 .orbital-destination h1 {
@@ -1698,7 +1734,8 @@ h3 {
   font-weight: 400;
   letter-spacing: -0.085em;
   line-height: 0.8;
-  animation-delay: 6.4s;
+  text-shadow: 0 0.2rem 2.4rem oklch(10% 0.03 220 / 0.5);
+  animation-delay: 8.8s;
 }
 
 .orbital-destination > div {
@@ -1710,7 +1747,7 @@ h3 {
   font-variant-numeric: tabular-nums;
   font-weight: 650;
   letter-spacing: 0.12em;
-  animation-delay: 6.54s;
+  animation-delay: 9.02s;
 }
 
 .orbital-destination > div i {
@@ -1719,7 +1756,7 @@ h3 {
   height: 1px;
   background: var(--sun);
   transform: scaleX(0);
-  animation: date-line 420ms 6.61s var(--ease-out-quart) forwards;
+  animation: orbital-route-line 460ms 9.12s var(--ease-out-quart) forwards;
 }
 
 .orbital-final-mark {
@@ -1739,7 +1776,7 @@ h3 {
   opacity: 0;
   text-transform: uppercase;
   transform: translateY(0.6rem);
-  animation: final-mark 380ms 6.72s var(--ease-out-quart) forwards;
+  animation: orbital-copy-arrive 420ms 9.35s var(--ease-out-quart) forwards;
 }
 
 .orbital-progress {
@@ -1750,12 +1787,12 @@ h3 {
   left: var(--space-lg);
   height: 1px;
   overflow: hidden;
-  background: oklch(82% 0.04 190 / 0.16);
+  background: oklch(82% 0.04 190 / 0.18);
   opacity: 0;
   pointer-events: none;
   animation:
-    orbital-hud-arrive 320ms 280ms var(--ease-out-quart) forwards,
-    orbital-hud-leave 220ms 5.05s linear forwards;
+    orbital-fade-in 340ms 0.4s var(--ease-out-quart) forwards,
+    orbital-fade-out 240ms 6.15s linear forwards;
 }
 
 .orbital-progress span {
@@ -1764,7 +1801,7 @@ h3 {
   background: linear-gradient(90deg, var(--sea), var(--sun), var(--coral));
   transform: scaleX(0);
   transform-origin: left;
-  animation: orbital-progress 4.55s 420ms linear forwards;
+  animation: orbital-progress 5.95s 0.45s linear forwards;
 }
 
 .orbital-progress i {
@@ -1777,7 +1814,7 @@ h3 {
   background: var(--sun);
   box-shadow: 0 0 1rem var(--sun);
   transform: translate(-50%, -50%);
-  animation: orbital-progress-dot 4.55s 420ms linear forwards;
+  animation: orbital-progress-dot 5.95s 0.45s linear forwards;
 }
 
 @keyframes orbital-finale {
@@ -1787,9 +1824,20 @@ h3 {
   }
 }
 
-@keyframes orbital-loading {
+@keyframes orbital-dawn-lift {
   to {
-    transform: rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes orbital-haze {
+  0% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.78;
+    transform: scale(1);
   }
 }
 
@@ -1805,45 +1853,30 @@ h3 {
   }
 }
 
-@keyframes orbital-scan {
-  0% {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  18%,
-  78% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-}
-
 @keyframes orbital-cloud-pass {
   0% {
     opacity: 0;
-    transform: translate3d(-16%, 10%, 0) scale(1.2);
+    transform: translate3d(-16%, 11%, 0) scale(1.2);
   }
-  34% {
-    opacity: 0.62;
+  32% {
+    opacity: 0.55;
   }
-  62% {
-    opacity: 0.48;
+  66% {
+    opacity: 0.42;
   }
   100% {
     opacity: 0;
-    transform: translate3d(17%, -9%, 0) scale(1.04);
+    transform: translate3d(18%, -10%, 0) scale(1.02);
   }
 }
 
-@keyframes orbital-hud-arrive {
+@keyframes orbital-fade-in {
   to {
     opacity: 1;
   }
 }
 
-@keyframes orbital-hud-leave {
+@keyframes orbital-fade-out {
   to {
     opacity: 0;
   }
@@ -1873,6 +1906,13 @@ h3 {
   }
 }
 
+@keyframes orbital-descent-leave {
+  to {
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(1.04);
+  }
+}
+
 @keyframes orbital-route-line {
   to {
     transform: scaleX(1);
@@ -1893,26 +1933,6 @@ h3 {
   }
 }
 
-@keyframes orbital-descent-arrive {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes orbital-descent-leave {
-  to {
-    opacity: 0;
-    transform: translateY(-0.75rem) scale(1.03);
-  }
-}
-
-@keyframes orbital-altitude-arrive {
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes orbital-altitude-drop {
   to {
     transform: translateY(0);
@@ -1922,7 +1942,7 @@ h3 {
 @keyframes orbital-coast-arrive {
   0% {
     opacity: 0;
-    transform: scale(1.025);
+    transform: scale(1.03);
   }
   100% {
     opacity: 1;
@@ -1932,7 +1952,7 @@ h3 {
 
 @keyframes orbital-coast-camera {
   to {
-    transform: scale(1.035) translate3d(0, 0, 0);
+    transform: scale(1.04) translate3d(0, 0, 0);
   }
 }
 
@@ -1940,18 +1960,11 @@ h3 {
   0% {
     opacity: 0;
   }
-  38% {
+  42% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-  }
-}
-
-@keyframes orbital-destination-arrive {
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
