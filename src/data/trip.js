@@ -226,13 +226,26 @@ export const days = [
       },
       {
         time: "20:30",
-        title: "Dîner albanais chez Fevan",
+        title: "Dîner autour de Dhërmi",
         type: "food",
-        detail: "Une petite taverne familiale : poivrons farcis, casserole de poisson, moussaka et légumes du jardin.",
-        location: {
-          label: "Voir la taverne",
-          url: "https://www.google.com/maps?q=40.160286,19.628166",
-        },
+        detail: "Trois bonnes tables pour terminer la journée entre cuisine albanaise, grillades et panorama sur la côte.",
+        options: [
+          {
+            name: "Grill House Amici",
+            note: "Notre choix · grillades, cuisine méditerranéenne et terrasse végétale",
+            url: "https://www.google.com/maps/search/?api=1&query=Grill+House+Amici+Dhermi",
+          },
+          {
+            name: "Taverna Fevan",
+            note: "Le plus authentique · cuisine albanaise familiale et généreuse",
+            url: "https://www.google.com/maps?q=40.160286,19.628166",
+          },
+          {
+            name: "Panorama Dhërmi",
+            note: "Pour la vue · cuisine simple et prix raisonnables",
+            url: "https://www.google.com/maps/search/?api=1&query=Panorama+Dhermi",
+          },
+        ],
       },
     ],
   },
