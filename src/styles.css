@@ -1045,8 +1045,7 @@ h3 {
 
 .birthday-copy p,
 .birthday-copy h1 span,
-.birthday-copy h1 em,
-.birthday-copy small {
+.birthday-copy h1 em {
   opacity: 0;
   transform: translateY(1rem);
   animation:
@@ -1083,14 +1082,6 @@ h3 {
   font-style: normal;
   word-spacing: 0.1em;
   animation-delay: 1.16s, 3.54s;
-}
-
-.birthday-copy small {
-  max-width: 27rem;
-  color: oklch(86% 0.032 190);
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  animation-delay: 1.62s, 3.58s;
 }
 
 @keyframes birthday-skip-arrive {
@@ -4836,8 +4827,7 @@ h3 {
   .birthday-sky__stars,
   .birthday-copy p,
   .birthday-copy h1 span,
-  .birthday-copy h1 em,
-  .birthday-copy small {
+  .birthday-copy h1 em {
     opacity: 1;
     transform: none;
     animation: none !important;

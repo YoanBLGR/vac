@@ -201,7 +201,6 @@ function BirthdaySequence({ onDone }) {
           <span>Joyeux anniversaire</span>
           <em>mon cœur</em>
         </h1>
-        <small>Le premier cadeau est juste derrière la lumière.</small>
       </section>
     </main>
   );
