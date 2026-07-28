@@ -277,7 +277,7 @@ export const days = [
       },
       {
         time: "13:30",
-        title: "Installation chez Emily",
+        title: "Check-in à l’hôtel",
         type: "hotel",
         detail: "Check-in, dépôt du sac humide et changement rapide avant le déjeuner.",
       },
