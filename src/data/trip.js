@@ -1,6 +1,6 @@
 export const trip = {
   title: "Échappée albanaise",
-  eyebrow: "Rien que toi & moi",
+  eyebrow: "Tous ensemble",
   dates: "31 juillet — 7 août 2026",
   unlockAt: "2026-07-30T22:00:00.000Z",
   departure: {
