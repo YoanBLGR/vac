@@ -19,7 +19,8 @@ export default defineConfig({
         "images/locked-dreamscape-v1.webp",
         "icons/icon-192.png",
         "icons/icon-512.png",
-        "icons/icon-maskable.png"
+        "icons/icon-maskable.png",
+        "private/car-rental-voucher.bin"
       ],
       manifest: {
         name: "Notre échappée",

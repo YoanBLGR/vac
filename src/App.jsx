@@ -20,8 +20,10 @@ import {
   CircleEllipsis,
   Clock3,
   Compass,
+  Download,
   ExternalLink,
   Footprints,
+  FileText,
   Heart,
   Hotel,
   Info,
@@ -34,6 +36,7 @@ import {
   Plane,
   Route,
   Ship,
+  ShieldCheck,
   Sparkles,
   Sun,
   Sunrise,
@@ -64,6 +67,47 @@ const REVEAL_TIME_SCALE = 2;
 // Filet de sécurité de chargement, pas un temps de mise en scène : il ne suit
 // pas l'échelle.
 const REVEAL_STAGE_TIMEOUT = 3000;
+const VOUCHER_ASSET_URL = "/private/car-rental-voucher.bin";
+const VOUCHER_STORAGE_KEY = "albania-car-voucher-key";
+
+function decodeVoucherKey(value) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  const bytes = Uint8Array.from(window.atob(padded), (character) => character.charCodeAt(0));
+
+  if (bytes.length !== 32) {
+    throw new Error("Clé de document invalide");
+  }
+
+  return bytes;
+}
+
+async function decryptVoucher(accessKey) {
+  const response = await fetch(VOUCHER_ASSET_URL);
+  if (!response.ok) {
+    throw new Error("Le document chiffré est indisponible");
+  }
+
+  const encrypted = new Uint8Array(await response.arrayBuffer());
+  if (encrypted.length < 29) {
+    throw new Error("Le document chiffré est incomplet");
+  }
+
+  const key = await window.crypto.subtle.importKey(
+    "raw",
+    decodeVoucherKey(accessKey),
+    { name: "AES-GCM" },
+    false,
+    ["decrypt"],
+  );
+  const plaintext = await window.crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: encrypted.slice(0, 12), tagLength: 128 },
+    key,
+    encrypted.slice(12),
+  );
+
+  return new Blob([plaintext], { type: "application/pdf" });
+}
 
 const navItems = [
   { id: "home", label: "Voyage", icon: Compass },
@@ -931,6 +975,121 @@ function InstallCard({ installable, installed, isIos, onInstall }) {
   );
 }
 
+function VoucherCard() {
+  const [accessKey, setAccessKey] = useState(() => localStorage.getItem(VOUCHER_STORAGE_KEY) || "");
+  const [documentUrl, setDocumentUrl] = useState("");
+  const [status, setStatus] = useState("idle");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    const sharedKey = fragment.get("voucher");
+
+    if (!sharedKey) return;
+
+    try {
+      decodeVoucherKey(sharedKey);
+      localStorage.setItem(VOUCHER_STORAGE_KEY, sharedKey);
+      setAccessKey(sharedKey);
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    } catch {
+      setError("Le lien privé de ce document n’est pas valide.");
+    }
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (documentUrl) URL.revokeObjectURL(documentUrl);
+    },
+    [documentUrl],
+  );
+
+  const prepareDocument = async () => {
+    setStatus("loading");
+    setError("");
+
+    try {
+      const blob = await decryptVoucher(accessKey);
+      setDocumentUrl((currentUrl) => {
+        if (currentUrl) URL.revokeObjectURL(currentUrl);
+        return URL.createObjectURL(blob);
+      });
+      setStatus("ready");
+    } catch {
+      setStatus("error");
+      setError("Impossible d’ouvrir le bon. Recharge le lien privé sur cet appareil.");
+    }
+  };
+
+  return (
+    <section className="voucher-vault">
+      <div className="voucher-vault__heading">
+        <span className="voucher-vault__icon" aria-hidden="true">
+          <FileText size={24} />
+        </span>
+        <div>
+          <p className="section-kicker">Document privé</p>
+          <h2>Bon de location</h2>
+        </div>
+        <span className="voucher-vault__security">
+          <ShieldCheck size={14} />
+          Chiffré
+        </span>
+      </div>
+
+      <div className="voucher-vault__route" aria-label="Résumé de la location">
+        <div>
+          <span>Prise en charge</span>
+          <strong>31 juillet · 13:15</strong>
+          <small>Tirana TIA</small>
+        </div>
+        <i aria-hidden="true" />
+        <div>
+          <span>Restitution</span>
+          <strong>6 août · 21:45</strong>
+          <small>Tirana TIA</small>
+        </div>
+      </div>
+
+      <p className="voucher-vault__copy">
+        Le PDF complet reste chiffré sur le serveur. Sa clé est conservée uniquement sur cet appareil après ouverture
+        du lien privé.
+      </p>
+
+      {error && <p className="voucher-vault__error" role="alert">{error}</p>}
+
+      {!accessKey && !error && (
+        <p className="voucher-vault__locked">
+          Ouvre une fois le lien privé du voyage sur cet appareil pour déverrouiller le bon.
+        </p>
+      )}
+
+      {accessKey && status !== "ready" && (
+        <button
+          className="voucher-vault__prepare"
+          type="button"
+          onClick={prepareDocument}
+          disabled={status === "loading"}
+        >
+          {status === "loading" ? "Déchiffrement…" : "Préparer le bon"}
+          <ShieldCheck size={17} />
+        </button>
+      )}
+
+      {documentUrl && (
+        <div className="voucher-vault__actions">
+          <a href={documentUrl} target="_blank" rel="noreferrer">
+            Ouvrir le PDF <ExternalLink size={16} />
+          </a>
+          <a href={documentUrl} download="bon-location-localrent.pdf">
+            Télécharger <Download size={16} />
+          </a>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function EssentialsView({ installable, installed, isIos, onInstall }) {
   const [checked, setChecked] = useStoredState("albania-checklist", {});
   const total = checklistGroups.reduce((sum, group) => sum + group.items.length, 0);
@@ -968,13 +1127,15 @@ function EssentialsView({ installable, installed, isIos, onInstall }) {
         </div>
       </aside>
 
+      <VoucherCard />
+
       <InstallCard installable={installable} installed={installed} isIos={isIos} onInstall={onInstall} />
 
       <section className="privacy-note">
         <Info size={18} />
         <p>
-          Les références de réservation et cartes d’embarquement restent volontairement hors de cette app. Garde-les
-          dans tes documents enregistrés hors ligne.
+          Le bon de location est stocké sous forme chiffrée. Sa référence et tes informations personnelles
+          n’apparaissent jamais dans le code public de l’app.
         </p>
       </section>
     </div>
