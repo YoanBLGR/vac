@@ -1364,8 +1364,7 @@ h3 {
 
 .orbital-opening span,
 .orbital-route-card__kicker,
-.orbital-descent__kicker,
-.orbital-coast-copy span {
+.orbital-descent__kicker {
   color: oklch(78% 0.15 52);
   font-size: 0.6rem;
   font-weight: 760;

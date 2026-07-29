@@ -437,7 +437,6 @@ function RevealSequence({ onDone }) {
       </div>
 
       <div className="orbital-coast-copy" aria-hidden="true">
-        <span>Impact visuel</span>
         <strong>La mer au bout de chaque virage.</strong>
       </div>
 
