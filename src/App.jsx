@@ -24,7 +24,6 @@ import {
   ExternalLink,
   Footprints,
   FileText,
-  Heart,
   Hotel,
   Info,
   Landmark,
@@ -611,10 +610,6 @@ function HomeView({ onOpenDay, onNavigate }) {
           </div>
         </section>
 
-        <section className="quote-section" aria-label="Note personnelle">
-          <Heart size={21} fill="currentColor" aria-hidden="true" />
-          <blockquote>“Joyeux anniversaire mon coeur {"<3"}”</blockquote>
-        </section>
       </div>
     </div>
   );
