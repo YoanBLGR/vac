@@ -235,7 +235,7 @@ function LockedScreen({ canReveal, onReveal }) {
           </span>
           <ArrowRight size={20} aria-hidden="true" />
         </button>
-        <p>Garde cette app près de toi. Le compte à rebours continue même hors ligne.</p>
+        <p>Garde cette app près de toi.</p>
       </div>
     </main>
   );
