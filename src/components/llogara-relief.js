@@ -13,6 +13,12 @@ import * as THREE from "three";
  * topographique est autant un motif du carnet de voyage qu'une façon de ne pas
  * demander à un terrain procédural de tenir un examen photoréaliste.
  *
+ * Le cadrage vise la vue classique depuis le col : le mur des Cérauniens à
+ * gauche, la côte qui file en diagonale vers l'horizon, la mer à droite avec
+ * ses hauts-fonds turquoise et le chemin de lumière du soir. Terre et mer sont
+ * un seul maillage — la distance au rivage voyage dans un attribut, si bien
+ * que l'eau turquoise épouse exactement le trait de côte.
+ *
  * `update(time)` reçoit l'horloge de la partition (secondes écrites, voir
  * OrbitalScene) — il n'y a qu'une horloge pour toute la séquence.
  */
@@ -84,9 +90,20 @@ function ridgedFbm(x, y, octaves) {
   return total / weight;
 }
 
-/** Trait de côte, en kilomètres depuis l'axe de la scène. */
+/**
+ * Trait de côte, en kilomètres depuis l'axe de la scène. La dérive linéaire
+ * fait fuir le rivage en diagonale vers le large : vu de la caméra, la côte
+ * dessine l'arc d'une baie plutôt qu'une droite.
+ */
 function shorelineAt(depth) {
-  return 0.55 + Math.sin(depth * 0.21) * 0.5 + (valueNoise(depth * 0.16, 4.2) - 0.5) * 0.7;
+  return (
+    0.45 +
+    depth * 0.055 +
+    Math.sin(depth * 0.21) * 0.48 +
+    // Caps secondaires : la côte s'égrène en pointes successives vers le sud.
+    Math.sin(depth * 0.55 + 1.7) * 0.22 +
+    (valueNoise(depth * 0.16, 4.2) - 0.5) * 0.65
+  );
 }
 
 /**
@@ -95,12 +112,14 @@ function shorelineAt(depth) {
  * trois kilomètres du rivage, et le col lui-même est à 1 027 m — d'où la
  * hauteur de caméra plus bas.
  *
- * `across` croît vers le large ; la terre est donc du côté négatif.
+ * `across` croît vers le large ; la terre est donc du côté négatif. `inland`
+ * est renvoyé signé (négatif au large) : c'est lui qui pilote la couleur de
+ * l'eau côté shader.
  */
 function reliefAt(across, depth) {
   const shore = shorelineAt(depth);
   const inland = (shore - across) / 3.6;
-  if (inland <= 0) return { height: 0, land: 0 };
+  if (inland <= 0) return { height: 0, inland };
 
   const land = clamp01(inland * 7);
   const escarpment = smoothstep(0, 0.3, inland);
@@ -117,7 +136,7 @@ function reliefAt(across, depth) {
 
   // Çika, le point haut du massif, culmine à 2 044 m : au-delà, les crêtes
   // passent en roche nue et tout le versant vire au beige.
-  return { height: Math.max(0, height * land) * 0.78, land };
+  return { height: Math.max(0, height * land) * 0.78, inland };
 }
 
 function createSkyTexture() {
@@ -127,9 +146,9 @@ function createSkyTexture() {
   const context = canvas.getContext("2d");
   const gradient = context.createLinearGradient(0, 0, 0, 256);
   gradient.addColorStop(0, "#1d4b6b");
-  gradient.addColorStop(0.34, "#5a8fa6");
-  gradient.addColorStop(0.62, "#d9a878");
-  gradient.addColorStop(0.82, "#f5c98c");
+  gradient.addColorStop(0.44, "#5a8fa6");
+  gradient.addColorStop(0.74, "#d9a878");
+  gradient.addColorStop(0.88, "#f5c98c");
   gradient.addColorStop(1, "#fbe0b4");
   context.fillStyle = gradient;
   context.fillRect(0, 0, 4, 256);
@@ -146,7 +165,7 @@ export function createLlogaraRelief({ portrait }) {
   // Le soleil rase la mer, comme sur l'illustration finale : c'est ce raccord
   // de lumière qui fait tenir le fondu entre les deux. La mer est vers +x, donc
   // la lumière vient de là et les pentes tournées vers le large s'allument.
-  const sunDirection = new THREE.Vector3(0.78, 0.17, 0.28).normalize();
+  const sunDirection = new THREE.Vector3(0.78, 0.15, 0.3).normalize();
 
   const skyTexture = createSkyTexture();
   const skyMaterial = new THREE.MeshBasicMaterial({
@@ -162,24 +181,27 @@ export function createLlogaraRelief({ portrait }) {
   scene.add(sky);
   disposables.push(skyTexture, skyMaterial, sky.geometry);
 
-  const width = 14;
-  const depth = 22;
+  // Un seul plan porte la terre et la mer. Décalé vers +x pour que la Ionienne
+  // occupe la moitié droite du cadre jusqu'à l'horizon.
+  const width = 20;
+  const depth = 24;
   const segmentsX = portrait ? 150 : 190;
   const segmentsY = portrait ? 210 : 260;
   const geometry = new THREE.PlaneGeometry(width, depth, segmentsX, segmentsY);
+  geometry.translate(3, 0, 0);
   const positions = geometry.attributes.position;
-  const landAttribute = new Float32Array(positions.count);
+  const inlandAttribute = new Float32Array(positions.count);
 
   for (let index = 0; index < positions.count; index += 1) {
     const across = positions.getX(index);
     // Le plan est ensuite basculé à plat : son y devient la profondeur.
     const along = positions.getY(index);
-    const { height, land } = reliefAt(across, along);
+    const { height, inland } = reliefAt(across, along);
     positions.setZ(index, height);
-    landAttribute[index] = land;
+    inlandAttribute[index] = inland;
   }
 
-  geometry.setAttribute("aLand", new THREE.BufferAttribute(landAttribute, 1));
+  geometry.setAttribute("aInland", new THREE.BufferAttribute(inlandAttribute, 1));
   geometry.rotateX(-Math.PI / 2);
   geometry.computeVertexNormals();
 
@@ -190,18 +212,19 @@ export function createLlogaraRelief({ portrait }) {
       uOpacity: { value: 0 },
       uFill: { value: 0 },
       uSweep: { value: -depth },
-      uHorizon: { value: new THREE.Color(0xbcb7a6) },
+      uTime: { value: 0 },
+      uHorizon: { value: new THREE.Color(0xe3c493) },
     },
     vertexShader: `
-      attribute float aLand;
+      attribute float aInland;
       varying vec3 vNormal;
       varying vec3 vPosition;
-      varying float vLand;
+      varying float vInland;
 
       void main() {
         vNormal = normalize(normalMatrix * normal);
         vPosition = position;
-        vLand = aLand;
+        vInland = aInland;
         vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * viewPosition;
       }
@@ -211,41 +234,85 @@ export function createLlogaraRelief({ portrait }) {
       uniform float uOpacity;
       uniform float uFill;
       uniform float uSweep;
+      uniform float uTime;
       uniform vec3 uHorizon;
       varying vec3 vNormal;
       varying vec3 vPosition;
-      varying float vLand;
+      varying float vInland;
+
+      float hash2(vec2 point) {
+        return fract(sin(dot(point, vec2(127.1, 311.7))) * 43758.5453);
+      }
 
       void main() {
-        if (vLand < 0.02) discard;
+        // Le tracé topographique balaie la scène du fond vers l'avant.
+        float scan = smoothstep(uSweep - 2.4, uSweep + 0.8, -vPosition.z);
+        float distance = clamp((-vPosition.z - 3.0) / 17.0, 0.0, 1.0);
+        float inlandKm = vInland * 3.6;
 
+        if (inlandKm < 0.012) {
+          // --- Mer Ionienne ---
+          float offshore = -inlandKm;
+          vec3 turquoise = vec3(0.13, 0.47, 0.47);
+          vec3 deep = vec3(0.02, 0.16, 0.27);
+          // Les hauts-fonds turquoise tiennent sur ~150 m puis tombent vite :
+          // c'est la signature de la Riviera vue d'en haut. Les deux gradients
+          // se chevauchent pour ne pas laisser lire des bandes.
+          vec3 water = mix(turquoise, vec3(0.035, 0.26, 0.35), smoothstep(0.015, 0.3, offshore));
+          water = mix(water, deep, smoothstep(0.2, 1.5, offshore));
+
+          // Chemin de lumière sous le soleil, scintillement au loin seulement.
+          float path = exp(-pow((vPosition.x - 7.5) * 0.16, 2.0));
+          float ripple = hash2(floor(vPosition.xz * vec2(9.0, 34.0) + vec2(uTime * 0.4, uTime * 1.6)));
+          float glitter = smoothstep(0.74, 1.0, ripple) * path * smoothstep(0.05, 0.45, distance);
+          // Plafonné : additionné à la brume d'horizon, un chemin trop généreux
+          // crame tout le large en blanc.
+          water += vec3(1.0, 0.78, 0.5) * min(path * (0.22 + 0.3 * distance) + glitter * 0.4, 0.5);
+
+          // Écume : un liseré discret et vivant sur le trait de côte.
+          float lap = 0.007 + 0.004 * sin(uTime * 1.7 + vPosition.z * 6.0);
+          float foam = smoothstep(lap, 0.0, offshore) * 0.3;
+          foam += (smoothstep(0.04 + lap, 0.024 + lap, offshore) - smoothstep(0.024 + lap, 0.01 + lap, offshore)) * 0.09;
+          water += vec3(0.93, 0.97, 0.95) * foam;
+
+          water = mix(water, uHorizon, pow(distance, 1.9) * 0.6);
+          gl_FragColor = vec4(water, uFill * scan * uOpacity);
+          #include <colorspace_fragment>
+          return;
+        }
+
+        // --- Massif ---
         vec3 normal = normalize(vNormal);
         float altitude = vPosition.y;
 
-        // Llogara, c'est d'abord une pinède : elle tient le bas des pentes
-        // jusque vers 1 200 m, la roche nue ne prend le dessus qu'au-dessus.
         // Altitudes relevées sur le maillage : médiane 1,07 km, p95 2,12. La
         // pinède doit donc tenir jusqu'à ~1,5 km pour rester la dominante —
         // c'est le contraste entre elle et le calcaire nu des crêtes qui rend
         // le massif lisible.
+        vec3 sand = vec3(0.66, 0.58, 0.44);
         vec3 coast = vec3(0.26, 0.24, 0.17);
         vec3 pine = vec3(0.055, 0.115, 0.085);
         vec3 rock = vec3(0.27, 0.24, 0.19);
         vec3 limestone = vec3(0.52, 0.47, 0.39);
-        vec3 albedo = mix(coast, pine, smoothstep(0.05, 0.42, altitude));
-        // La limite des arbres est haute ici : la pinède tient jusque vers
-        // 1 900 m, la roche nue ne prend que les crêtes sommitales.
+        // La pinède descend presque jusqu'à l'eau — sur la Riviera, la plage
+        // est une ponctuation, pas une bande.
+        vec3 albedo = mix(coast, pine, smoothstep(0.03, 0.22, altitude));
         albedo = mix(albedo, rock, smoothstep(1.45, 1.95, altitude));
         albedo = mix(albedo, limestone, smoothstep(1.95, 2.3, altitude));
+        // Ourlet de plage au ras de l'eau.
+        albedo = mix(sand, albedo, smoothstep(0.004, 0.018, altitude));
 
         // Les faces raides se déboisent : la roche affleure dans les pentes.
         float steep = smoothstep(0.72, 0.32, normal.y);
         albedo = mix(albedo, rock, steep * 0.35);
 
+        // La caméra regarde depuis le large : les faces vues sont celles que le
+        // soleil du soir éclaire — le versant doit vivre, pas se découper en
+        // silhouette.
         float key = max(dot(normal, uSunDirection), 0.0);
         float sky = 0.5 + 0.5 * normal.y;
-        vec3 lit = albedo * (0.08 + key * 0.95) * vec3(1.0, 0.8, 0.6);
-        lit += albedo * sky * vec3(0.18, 0.26, 0.38);
+        vec3 lit = albedo * (0.12 + key * 1.3) * vec3(1.0, 0.82, 0.6);
+        lit += albedo * sky * vec3(0.2, 0.28, 0.4);
 
         // Liseré chaud sur la ligne de crête, dos au soleil.
         float rim = pow(1.0 - abs(dot(normal, uSunDirection)), 4.0) * smoothstep(1.3, 2.4, altitude);
@@ -254,15 +321,11 @@ export function createLlogaraRelief({ portrait }) {
         // Courbes de niveau : le relief se lit avant d'exister en matière.
         float bands = abs(fract(altitude * 6.0) - 0.5);
         float contour = smoothstep(0.07, 0.012, bands);
-        // Le tracé se propage du fond vers l'avant.
-        float scan = smoothstep(uSweep - 2.4, uSweep + 0.8, -vPosition.z);
         float pulse = smoothstep(uSweep + 0.8, uSweep - 1.4, -vPosition.z);
         vec3 contourColor = mix(vec3(1.0, 0.86, 0.62), vec3(1.0, 0.97, 0.9), pulse);
 
-        // Perspective aérienne : les plans lointains se noient dans le ciel.
         // La brume d'éloignement est claire et le versant sombre : dosée trop
         // fort, elle repeint tout le massif en beige dès le deuxième plan.
-        float distance = clamp((-vPosition.z - 3.0) / 17.0, 0.0, 1.0);
         lit = mix(lit, uHorizon, pow(distance, 1.7) * 0.5);
 
         vec3 color = mix(vec3(0.0), lit, uFill);
@@ -281,72 +344,16 @@ export function createLlogaraRelief({ portrait }) {
   scene.add(relief);
   disposables.push(geometry, reliefMaterial);
 
-  const seaMaterial = new THREE.ShaderMaterial({
-    transparent: true,
-    uniforms: {
-      uSunDirection: { value: sunDirection },
-      uOpacity: { value: 0 },
-      uTime: { value: 0 },
-      uHorizon: { value: new THREE.Color(0xf0c48c) },
-    },
-    vertexShader: `
-      varying vec3 vPosition;
-      void main() {
-        vPosition = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 uSunDirection;
-      uniform float uOpacity;
-      uniform float uTime;
-      uniform vec3 uHorizon;
-      varying vec3 vPosition;
-
-      float hash(vec2 point) {
-        return fract(sin(dot(point, vec2(127.1, 311.7))) * 43758.5453);
-      }
-
-      void main() {
-        vec3 deep = vec3(0.03, 0.12, 0.19);
-        vec3 shallow = vec3(0.08, 0.29, 0.36);
-        float distance = clamp((-vPosition.z + 4.0) / 15.0, 0.0, 1.0);
-        vec3 color = mix(shallow, deep, smoothstep(0.0, 0.3, distance));
-
-        // Chemin de lumière : c'est lui qui fait la mer, plus que sa couleur.
-        // Le plan est décalé de +18 en monde : le chemin de lumière se cale
-        // donc en x local négatif pour tomber devant la caméra.
-        float path = exp(-pow((vPosition.x + 13.0) * 0.09, 2.0));
-        float ripple = hash(floor(vPosition.xz * vec2(9.0, 34.0) + vec2(uTime * 0.4, uTime * 1.6)));
-        // Le scintillement se concentre au loin : de près, un semis de points
-        // blancs se lit comme du bruit, pas comme un reflet.
-        float glitter = smoothstep(0.74, 1.0, ripple) * path * smoothstep(0.1, 0.5, distance);
-        color += vec3(1.0, 0.79, 0.5) * (path * 0.62 + glitter * 0.55);
-
-        color = mix(color, uHorizon, pow(distance, 2.2) * 0.5);
-        gl_FragColor = vec4(color, uOpacity);
-        #include <colorspace_fragment>
-      }
-    `,
-  });
-  const sea = new THREE.Mesh(new THREE.PlaneGeometry(60, 60, 1, 1), seaMaterial);
-  sea.geometry.rotateX(-Math.PI / 2);
-  sea.position.set(18, 0, -6);
-  scene.add(sea);
-  disposables.push(sea.geometry, seaMaterial);
-
   // La route : le motif de la marque, et l'écho direct du virage de
-  // l'illustration finale. Elle descend le versant en lacets, de l'intérieur
-  // vers la côte.
-  // Plutôt qu'un tracé fixé à l'avance — qui, sur un terrain bruité, finit par
-  // franchir les sommets — on cherche pour chaque tranche l'endroit où le
-  // versant atteint l'altitude visée. La route suit donc une courbe de niveau,
-  // comme une vraie corniche.
+  // l'illustration finale. Plutôt qu'un tracé fixé à l'avance — qui, sur un
+  // terrain bruité, finit par franchir les sommets — on cherche pour chaque
+  // tranche l'endroit où le versant atteint l'altitude visée. La route suit
+  // donc une courbe de niveau, comme la corniche réelle à mi-pente.
   const roadPoints = [];
   for (let index = 0; index <= 120; index += 1) {
     const progress = index / 120;
     const along = mix(5.5, -6.5, progress);
-    const target = 0.62 + Math.sin(progress * Math.PI * 2.6) * 0.22;
+    const target = 0.4 + Math.sin(progress * Math.PI * 2.6) * 0.16;
     const shore = shorelineAt(along);
     let across = shore;
     let height = 0;
@@ -377,13 +384,13 @@ export function createLlogaraRelief({ portrait }) {
       varying float vProgress;
       void main() {
         float drawn = smoothstep(uProgress + 0.01, uProgress - 0.04, vProgress);
-        gl_FragColor = vec4(vec3(0.86, 0.73, 0.55), drawn * uOpacity * 0.5);
+        gl_FragColor = vec4(vec3(0.86, 0.73, 0.55), drawn * uOpacity * 0.42);
         #include <colorspace_fragment>
       }
     `,
   });
   const road = new THREE.Mesh(
-    new THREE.TubeGeometry(roadCurve, 220, 0.013, 5, false),
+    new THREE.TubeGeometry(roadCurve, 220, 0.016, 5, false),
     roadMaterial,
   );
   scene.add(road);
@@ -412,16 +419,15 @@ export function createLlogaraRelief({ portrait }) {
     update(time) {
       const presence = this.presence(time);
       // Le tracé topographique balaie le relief du fond vers l'avant.
-      const sweep = mix(6.4, -5.4, easeOutCubic(clamp01((time - 6.1) / 1.55)));
+      const sweep = mix(11, -6, easeOutCubic(clamp01((time - 6.05) / 1.7)));
       const fill = smoothstep(6.9, 8.15, time);
       const approach = easeInOutCubic(clamp01((time - 6.3) / 3));
 
       reliefMaterial.uniforms.uOpacity.value = presence;
       reliefMaterial.uniforms.uFill.value = fill;
       reliefMaterial.uniforms.uSweep.value = sweep;
+      reliefMaterial.uniforms.uTime.value = time;
 
-      seaMaterial.uniforms.uOpacity.value = presence * smoothstep(7.1, 8.4, time);
-      seaMaterial.uniforms.uTime.value = time;
       // Le ciel arrive tôt : les courbes de niveau se détachent mieux sur le
       // bleu du petit matin que sur du noir, et le raccord depuis le globe ne
       // passe pas par un trou.
@@ -430,24 +436,23 @@ export function createLlogaraRelief({ portrait }) {
       roadMaterial.uniforms.uOpacity.value = presence * smoothstep(7.8, 8.6, time);
       roadMaterial.uniforms.uProgress.value = smoothstep(7.9, 9.3, time);
 
-      // La caméra longe la côte au large plutôt que de survoler les sommets :
-        // depuis l'intérieur, le premier relief venu bouche tout le cadre.
-      // Le massif tient la gauche, la mer la droite — le cadrage de
-      // l'illustration qui suit.
+      // La caméra plane au-dessus de l'eau, à hauteur du col : le mur des
+      // Cérauniens tient la gauche du cadre, la côte fuit vers l'horizon et la
+      // mer occupe la droite — le cadrage de l'illustration qui suit.
       camera.position.set(
-        mix(2.9, 0.9, approach),
-        mix(3.2, 1.8, approach),
-        mix(7.8, 2.9, approach),
+        mix(1.7, 1.05, approach),
+        mix(2.7, 1.5, approach),
+        mix(8.8, 3.6, approach),
       );
       // Le bruit place les crêtes où il veut : plutôt que d'ajuster le trajet à
       // la main, on garde la caméra au-dessus du sol quoi qu'il arrive.
       const ground = reliefAt(camera.position.x, -camera.position.z).height;
       camera.position.y = Math.max(camera.position.y, ground + 0.42);
 
-      focus.set(mix(-0.4, -1.3, approach), mix(1.25, 0.85, approach), mix(-2, -6.5, approach));
+      focus.set(mix(-0.3, -0.1, approach), mix(0.8, 0.3, approach), mix(-3.5, -10, approach));
       camera.up.set(0, 1, 0);
       camera.lookAt(focus);
-      camera.rotateZ(mix(0.022, -0.014, approach));
+      camera.rotateZ(mix(0.02, -0.012, approach));
     },
 
     dispose() {
