@@ -204,18 +204,7 @@ h3 {
 .locked-screen__top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.monogram {
-  display: grid;
-  width: 3rem;
-  height: 3rem;
-  place-items: center;
-  border: 1px solid oklch(86% 0.035 79);
-  border-radius: 50%;
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
+  justify-content: flex-end;
 }
 
 .secret-label {

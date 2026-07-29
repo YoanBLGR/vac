@@ -209,9 +209,6 @@ function LockedScreen({ canReveal, onReveal }) {
       </div>
 
       <div className="locked-screen__top">
-        <span className="monogram" aria-label="Notre échappée">
-          N·E
-        </span>
         <span className="secret-label">
           <span className="secret-label__dot" />
           Voyage scellé
