@@ -113,6 +113,7 @@ export const days = [
         time: "16:40",
         title: "Llogara, premier vertige",
         type: "view",
+        journey: { mode: "car", duration: "≈ 2 h 40" },
         detail: "Une pause courte dans la pinède, puis le panorama essentiel sur Palasë, Dhërmi et la mer Ionienne.",
         location: {
           label: "Ouvrir le panorama",
@@ -128,12 +129,14 @@ export const days = [
         time: "18:30",
         title: "Blue Boutique, enfin",
         type: "hotel",
+        journey: { mode: "car", duration: "≈ 1 h" },
         detail: "Check-in rapide, petit sac de plage et direction l’eau. La plage se trouve à environ 600–700 mètres.",
       },
       {
         time: "18:50",
         title: "Premier bain à Dhërmi",
         type: "swim",
+        journey: { mode: "walk", duration: "10 min" },
         detail: "Une baignade dans une mer autour de 25–27 °C, avant que la lumière ne devienne dorée.",
       },
       {
@@ -180,6 +183,7 @@ export const days = [
         time: "09:00",
         title: "Cap sur Gjipe",
         type: "boat",
+        journey: { mode: "walk", duration: "10 min" },
         detail: "Excursion en bateau vers Pirates’ Cave, Gjipe, Pigeon Cave et deux petites criques. Retour ciblé avant 12:30.",
         location: {
           label: "Point de départ",
@@ -197,6 +201,7 @@ export const days = [
         time: "14:30",
         title: "L’après-midi à Drymades",
         type: "swim",
+        journey: { mode: "car", duration: "20 min" },
         detail: "Baignade et snorkeling près d’Amar Beach Bar, dans une zone plus calme et rocheuse.",
         location: {
           label: "Ouvrir Amar",
@@ -208,6 +213,7 @@ export const days = [
         time: "18:15",
         title: "Le vieux Dhërmi",
         type: "culture",
+        journey: { mode: "car", duration: "20–25 min" },
         detail: "Monastère Sainte-Marie, clocher, ruelles de pierre et panorama sur les toits et la côte.",
         location: {
           label: "Voir le monastère",
@@ -218,6 +224,7 @@ export const days = [
         time: "19:15",
         title: "Golden hour à 360°",
         type: "sunset",
+        journey: { mode: "car", duration: "10 min" },
         detail: "Un verre sur le rooftop du 360° Sunset Bar. Le soleil descend vers 19:57.",
         location: {
           label: "Ouvrir le rooftop",
@@ -262,12 +269,14 @@ export const days = [
         time: "09:30",
         title: "Direction Himarë",
         type: "car",
+        journey: { mode: "car", duration: "30 min" },
         detail: "Check-out et route directe vers Emily’s Hotel. Dépôt des bagages et de la voiture vers 10:00.",
       },
       {
         time: "10:30",
         title: "Filikuri, rien que l’eau",
         type: "boat",
+        journey: { mode: "walk", duration: "5 min" },
         detail: "Water taxi privé vers une petite crique de galets blancs, bordée de falaises sur trois côtés.",
         location: {
           label: "Voir Filikuri",
@@ -279,24 +288,28 @@ export const days = [
         time: "13:30",
         title: "Check-in à l’hôtel",
         type: "hotel",
+        journey: { mode: "walk", duration: "5 min" },
         detail: "Check-in, dépôt du sac humide et changement rapide avant le déjeuner.",
       },
       {
         time: "14:00",
         title: "Déjeuner au restaurant Lui Potam",
         type: "food",
+        journey: { mode: "walk", duration: "5 min" },
         detail: "Poulpe ou crevettes à partager, poisson entier grillé ou linguine aux fruits de mer.",
       },
       {
         time: "15:15",
         title: "Le luxe de ne rien faire",
         type: "rest",
+        journey: { mode: "walk", duration: "2 min" },
         detail: "Potam Beach, juste devant l’hôtel : ombre, baignade, lecture et sieste jusqu’à 17:10.",
       },
       {
         time: "18:20",
         title: "Himarë, la ville haute",
         type: "culture",
+        journey: { mode: "car", duration: "15–20 min" },
         detail: "Remparts, passages pavés, maisons anciennes et vues ouvertes sur Livadhi et la mer.",
         location: {
           label: "Ouvrir le château",
@@ -307,6 +320,7 @@ export const days = [
         time: "19:20",
         title: "Le soleil sur les remparts",
         type: "sunset",
+        journey: { mode: "walk", duration: "3 min" },
         detail: "Un verre au Café Butterfly, avec le château, la baie et l’horizon dans le même cadre.",
       },
       {
@@ -362,6 +376,7 @@ export const days = [
         time: "07:00",
         title: "Petit-déjeuner à Potam",
         type: "food",
+        journey: { mode: "walk", duration: "5 min" },
         detail: "Petit-déjeuner nourrissant chez Astro : œufs ou omelette, toast ou pancakes à partager, fruits ou yaourt, café et eau pour la voiture.",
         tips: ["Départ impératif à 07:30 pour monter à Borsh avant la chaleur"],
         location: {
@@ -373,6 +388,7 @@ export const days = [
         time: "07:30",
         title: "Cap sur Borsh Castle",
         type: "car",
+        journey: { mode: "car", duration: "25–30 min" },
         detail: "Environ 25 à 30 minutes sur la SH8 avant la montée vers la forteresse.",
         tips: [
           "Le GPS pointe le château, pas forcément le meilleur stationnement",
@@ -388,6 +404,7 @@ export const days = [
         time: "08:00",
         title: "Borsh, la forteresse sur la mer",
         type: "culture",
+        journey: { mode: "walk", duration: "15–30 min" },
         detail: "Montée courte et raide, puis exploration des remparts, de la mosquée ottomane et du panorama sur les sept kilomètres de Borsh Beach.",
         tips: [
           "Chaussures fermées obligatoires · sol pavé, rocailleux et sans ombre",
@@ -400,6 +417,7 @@ export const days = [
         time: "10:10",
         title: "La cascade de Borsh",
         type: "view",
+        journey: { mode: "car", duration: "15 min" },
         detail: "Une courte promenade autour des arrivées d’eau, quelques photos et éventuellement un café ou une boisson fraîche.",
         tips: [
           "Arrêt de 20 min · stationnement directement devant",
@@ -415,6 +433,7 @@ export const days = [
         time: "10:45",
         title: "Borsh Beach, la plage sans fin",
         type: "swim",
+        journey: { mode: "car", duration: "10 min" },
         detail: "Deux transats, un parasol, une baignade d’environ 30 minutes puis une promenade sur cette immense plage ouverte sur le paysage.",
         tips: [
           "Zone plus tranquille près de Vila Hadhri",
@@ -430,6 +449,7 @@ export const days = [
         time: "12:25",
         title: "Déjeuner chez Posidonas",
         type: "food",
+        journey: { mode: "car", duration: "20 min" },
         detail: "Table extérieure face à la mer : calamars ou poulpe, poisson frais grillé à partager, salade grecque, légumes et café.",
         tips: [
           "Réservation : +355 69 512 1445",
@@ -446,6 +466,7 @@ export const days = [
         time: "14:05",
         title: "Porto Palermo, la forteresse secrète",
         type: "culture",
+        journey: { mode: "car", duration: "20 min" },
         detail: "Grandes salles voûtées, galeries fraîches, trois bastions et panorama depuis le toit sur la baie circulaire et l’ancien tunnel sous-marin.",
         tips: [
           "Entrée indicative : environ 300 ALL par personne, en espèces",
@@ -461,6 +482,7 @@ export const days = [
         time: "15:15",
         title: "Nager sous le château",
         type: "swim",
+        journey: { mode: "walk", duration: "5 min" },
         detail: "Baignade et snorkeling sur la petite plage au sud de l’isthme, le long des zones rocheuses, puis lumière dorée sur la forteresse.",
         tips: [
           "Première baignade jusqu’à 16:00, pause, puis retour à l’eau vers 16:30",
@@ -473,6 +495,7 @@ export const days = [
         time: "17:50",
         title: "Retour chez Emily",
         type: "hotel",
+        journey: { mode: "car", duration: "15–25 min" },
         detail: "Retour à Himarë, douche, vêtements légers et courte pause avant la dernière soirée en ville.",
         tips: [
           "Compter 15 à 25 min selon la circulation",
@@ -484,6 +507,7 @@ export const days = [
         time: "19:35",
         title: "Dîner au coucher du soleil",
         type: "food",
+        journey: { mode: "walk", duration: "25–30 min" },
         detail: "Table extérieure chez Taverna Lefteri avant le coucher du soleil vers 19:54 : poulpe grillé, mezzés, poisson du jour et trilece à partager.",
         tips: [
           "Réservation : +355 67 497 0164",
@@ -500,6 +524,7 @@ export const days = [
         time: "21:30",
         title: "Dernière soirée à Himarë",
         type: "rest",
+        journey: { mode: "walk", duration: "25–30 min" },
         detail: "Promenade digestive sur le front de mer, glace ou dernier verre en terrasse, puis retour à pied à Emily’s Hotel.",
         tips: [
           "Environ 50 km et 1 h 30 de conduite sur la journée",
@@ -533,6 +558,7 @@ export const days = [
         time: "08:00",
         title: "Petit-déjeuner chez Orzo",
         type: "food",
+        journey: { mode: "walk", duration: "2 min" },
         detail: "Un petit-déjeuner complet mais rapide juste en face de l’hôtel : œufs ou pancakes, fruits ou yaourt, café et une grande bouteille d’eau.",
         tips: ["Départ impératif à 08:40"],
         location: {
@@ -544,6 +570,7 @@ export const days = [
         time: "08:40",
         title: "La route vers Ksamil",
         type: "car",
+        journey: { mode: "car", duration: "1 h 45–2 h 15" },
         detail: "Environ 64 km par la SH8 puis la SH81. Compter 1 h 45 à 2 h 15 en août et traverser Sarandë sans entrer dans le centre.",
         tips: [
           "Pas d’arrêt à Borsh, Qeparo ou Porto Palermo, déjà découverts la veille",
@@ -572,6 +599,7 @@ export const days = [
         time: "11:00",
         title: "Premier bain à Lori Beach",
         type: "swim",
+        journey: { mode: "walk", duration: "4 min" },
         detail: "Quatre minutes à pied suffisent pour rejoindre cette petite baie de sable, calme et turquoise, idéale le jour du transfert.",
         tips: [
           "Rejoindre la plage à pied, sans reprendre la voiture",
@@ -594,6 +622,7 @@ export const days = [
         time: "13:40",
         title: "Check-in et préparation",
         type: "hotel",
+        journey: { mode: "walk", duration: "4 min" },
         detail: "Retour à l’hôtel, installation, douche rapide et changement de tenue. Préparer un petit sac pour Butrint avec eau, répulsif et protection solaire.",
         tips: [
           "Départ à 14:50 maximum",
@@ -604,6 +633,7 @@ export const days = [
         time: "14:50",
         title: "Cap sur Butrint",
         type: "car",
+        journey: { mode: "car", duration: "10–15 min" },
         detail: "Le site archéologique se trouve à environ quatre kilomètres. Compter 10 à 15 minutes jusqu’au parking principal.",
         tips: ["Si le parking principal est complet, utiliser le parking secondaire avant l’entrée"],
         location: {
@@ -634,12 +664,14 @@ export const days = [
         time: "17:45",
         title: "Retour et pause à l’hôtel",
         type: "rest",
+        journey: { mode: "car", duration: "10–15 min" },
         detail: "Retour à l’Hotel Siars vers 18:00, douche rapide et tenue pour le dîner. La voiture reste au parking pour la soirée.",
       },
       {
         time: "18:40",
         title: "À pied vers les îles",
         type: "walk",
+        journey: { mode: "walk", duration: "15–20 min" },
         detail: "Une marche de 15 à 20 minutes le long de Ksamil pour rejoindre Guvat avant la lumière dorée.",
         location: {
           label: "Ouvrir Guvat",
@@ -665,6 +697,7 @@ export const days = [
         time: "21:15",
         title: "Ksamil après le soleil",
         type: "rest",
+        journey: { mode: "walk", duration: "20 min" },
         detail: "Promenade tranquille le long de la baie, glace ou dernier verre selon l’envie, puis retour à pied à l’Hotel Siars vers 22:00.",
         tips: [
           "Préparer au moins 5 000 ALL en espèces",
@@ -697,6 +730,7 @@ export const days = [
         time: "08:30",
         title: "Direction le Blue Eye",
         type: "car",
+        journey: { mode: "car", duration: "1 h–1 h 10" },
         detail: "Départ matinal pour profiter de la source avant la foule et les 34–35 °C annoncés dans l’après-midi. Compter environ 1 h à 1 h 10 de route.",
         location: {
           label: "Ouvrir le parking",
@@ -707,6 +741,7 @@ export const days = [
         time: "09:35",
         title: "Le Blue Eye au meilleur moment",
         type: "view",
+        journey: { mode: "walk", duration: "25–30 min" },
         detail: "Depuis le parking, rejoindre la source en petit train ou scooter électrique, découvrir les différents points de vue puis revenir à pied avant la grosse chaleur.",
         tips: [
           "Compter environ 2 km entre le parking et la source",
@@ -723,6 +758,7 @@ export const days = [
         time: "11:00",
         title: "Cap sur le lac de Butrint",
         type: "car",
+        journey: { mode: "car", duration: "50–60 min" },
         detail: "Quitter le Blue Eye pour The Mussel House. Compter environ 50 à 60 minutes de route.",
         location: {
           label: "Ouvrir The Mussel House",
@@ -748,6 +784,7 @@ export const days = [
         time: "13:45",
         title: "La vraie pause",
         type: "rest",
+        journey: { mode: "car", duration: "10 min" },
         detail: "Retour à l’Hotel Siars pour une douche, la climatisation et une vraie sieste pendant les heures les plus chaudes.",
         tips: ["Retour depuis le restaurant : environ 4 km", "Pause jusqu’à 16:20"],
       },
@@ -779,6 +816,7 @@ export const days = [
         time: "16:45",
         title: "Option A · Kayak sur la baie",
         type: "boat",
+        journey: { mode: "walk", duration: "15 min" },
         detail: "Sortie en kayak avec Ksamil Water Sport autour de la baie et des îlots, avec une pause baignade selon la mer et le parcours conseillé sur place.",
         tips: [
           "Rendez-vous chez Ksamil Water Sport vers 16:45",
@@ -796,6 +834,7 @@ export const days = [
         time: "16:45",
         title: "Option B · Piscine sur les toits",
         type: "swim",
+        journey: { mode: "walk", duration: "20 min" },
         detail: "Après-midi très calme au rooftop de Porta Ksamil, avec piscine, bar et vue panoramique sur la baie jusqu’au coucher du soleil.",
         tips: [
           "Accès extérieur non garanti : confirmer impérativement avant le séjour",
@@ -823,6 +862,7 @@ export const days = [
         time: "20:30",
         title: "Dîner traditionnel chez Mëndra",
         type: "food",
+        journey: { mode: "walk", duration: "10–20 min" },
         detail: "Une table familiale pour retrouver les saveurs albanaises : lakror, feuilles farcies, viande cuite lentement et dessert maison.",
         tips: [
           "Avec l’option Porta, viser plutôt 20:50 après un passage rapide à l’hôtel",

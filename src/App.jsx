@@ -32,6 +32,7 @@ import {
   MapPin,
   Navigation,
   Palmtree,
+  PersonStanding,
   Plane,
   Route,
   Ship,
@@ -129,6 +130,11 @@ const eventIcons = {
   rest: Palmtree,
   prep: Luggage,
   walk: Footprints,
+};
+
+const journeyIcons = {
+  car: CarFront,
+  walk: PersonStanding,
 };
 
 function useStoredState(key, initialValue) {
@@ -669,6 +675,8 @@ function DaySelector({ selectedId, onSelect }) {
 function EventItem({ event, index }) {
   const [open, setOpen] = useState(index === 0);
   const Icon = eventIcons[event.type] || CircleEllipsis;
+  const JourneyIcon = event.journey ? journeyIcons[event.journey.mode] : null;
+  const journeyLabel = event.journey?.mode === "walk" ? "À pied" : "Voiture";
   const panelId = `event-${event.time.replace(":", "")}-${index}`;
 
   return (
@@ -684,7 +692,20 @@ function EventItem({ event, index }) {
         aria-controls={panelId}
       >
         <span className="event__time">{event.time}</span>
-        <strong>{event.title}</strong>
+        <span className="event__heading">
+          <strong>{event.title}</strong>
+          {JourneyIcon && (
+            <span
+              className={`event__journey event__journey--${event.journey.mode}`}
+              aria-label={`${journeyLabel}, ${event.journey.duration}`}
+            >
+              <JourneyIcon size={15} strokeWidth={1.9} aria-hidden="true" />
+              <span>{journeyLabel}</span>
+              <i aria-hidden="true" />
+              <b>{event.journey.duration}</b>
+            </span>
+          )}
+        </span>
         <ChevronDown size={19} />
       </button>
       <div className="event__reveal" id={panelId}>
