@@ -396,20 +396,6 @@ h3 {
   animation: reveal-bg 800ms var(--ease-out-expo) both;
 }
 
-.reveal-sequence__skip {
-  position: absolute;
-  z-index: 2;
-  top: max(var(--space-lg), env(safe-area-inset-top));
-  right: max(var(--space-lg), env(safe-area-inset-right));
-  min-width: 3.75rem;
-  min-height: 2.75rem;
-  border: 0;
-  background: transparent;
-  color: var(--ink-soft);
-  cursor: pointer;
-  font-size: var(--text-sm);
-}
-
 .reveal-sequence__route {
   position: absolute;
   inset: 6% 0 23%;
@@ -507,15 +493,6 @@ h3 {
   color: var(--paper-high);
   contain: layout paint;
   animation: scene-finale 520ms 4.05s cubic-bezier(0.7, 0, 0.84, 0) forwards;
-}
-
-.reveal-eclipse .reveal-sequence__skip {
-  z-index: 20;
-  border: 1px solid oklch(88% 0.025 78 / 0.28);
-  border-radius: 999px;
-  background: oklch(16% 0.035 215 / 0.42);
-  color: oklch(91% 0.021 78);
-  backdrop-filter: blur(0.5rem);
 }
 
 .eclipse-cosmos,
@@ -886,40 +863,6 @@ h3 {
   animation: birthday-scene-leave 500ms 4.75s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
-.birthday-sequence__skip {
-  position: absolute;
-  z-index: 20;
-  top: max(var(--space-md), env(safe-area-inset-top));
-  right: max(var(--space-md), env(safe-area-inset-right));
-  min-height: 2.75rem;
-  padding: 0 var(--space-md);
-  border: 1px solid oklch(42% 0.055 201 / 0.22);
-  border-radius: 999px;
-  background: oklch(99% 0.012 82 / 0.68);
-  color: oklch(31% 0.055 201);
-  font-size: var(--text-xs);
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  opacity: 0;
-  text-transform: uppercase;
-  transform: translateY(-0.55rem);
-  animation: birthday-skip-arrive 420ms 500ms var(--ease-out-quart) forwards;
-  backdrop-filter: blur(0.75rem);
-  transition:
-    border-color 180ms var(--ease-out-quart),
-    background 180ms var(--ease-out-quart),
-    transform 140ms var(--ease-out-quart);
-}
-
-.birthday-sequence__skip:hover {
-  border-color: oklch(67% 0.13 53 / 0.58);
-  background: oklch(100% 0 0 / 0.9);
-}
-
-.birthday-sequence__skip:active {
-  transform: scale(0.96);
-}
-
 .birthday-sky,
 .birthday-sky__stars,
 .birthday-sky__glow,
@@ -1086,13 +1029,6 @@ h3 {
   animation-delay: 1.16s, 3.54s;
 }
 
-@keyframes birthday-skip-arrive {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes birthday-stars-arrive {
   to {
     opacity: 0.56;
@@ -1217,30 +1153,6 @@ h3 {
 .reveal-orbital.is-running *::before,
 .reveal-orbital.is-running *::after {
   animation-play-state: running;
-}
-
-.reveal-orbital .reveal-sequence__skip {
-  z-index: 60;
-  top: max(var(--space-md), env(safe-area-inset-top));
-  right: max(var(--space-md), env(safe-area-inset-right));
-  border: 1px solid oklch(88% 0.03 200 / 0.24);
-  border-radius: 999px;
-  background: oklch(22% 0.045 226 / 0.42);
-  color: oklch(94% 0.018 90);
-  backdrop-filter: blur(0.75rem);
-  transition:
-    border-color 180ms var(--ease-out-quart),
-    background 180ms var(--ease-out-quart),
-    transform 140ms var(--ease-out-quart);
-}
-
-.reveal-orbital .reveal-sequence__skip:hover {
-  border-color: oklch(76% 0.14 55 / 0.7);
-  background: oklch(26% 0.05 226 / 0.62);
-}
-
-.reveal-orbital .reveal-sequence__skip:active {
-  transform: scale(0.96);
 }
 
 .orbital-stage,
@@ -1996,15 +1908,6 @@ h3 {
   color: var(--paper-high);
   contain: layout paint;
   animation: terrain-scene-finale 480ms 4.58s cubic-bezier(0.7, 0, 0.84, 0) forwards;
-}
-
-.reveal-terrain .reveal-sequence__skip {
-  z-index: 30;
-  border: 1px solid oklch(88% 0.025 78 / 0.25);
-  border-radius: 999px;
-  background: oklch(14% 0.04 211 / 0.58);
-  color: oklch(93% 0.02 78);
-  backdrop-filter: blur(0.55rem);
 }
 
 .terrain-sea,
@@ -5082,7 +4985,6 @@ h3 {
     animation: none !important;
   }
 
-  .birthday-sequence__skip,
   .birthday-sky__stars,
   .birthday-copy p,
   .birthday-copy h1 span,

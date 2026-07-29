@@ -271,10 +271,6 @@ function BirthdaySequence({ onDone }) {
 
   return (
     <main className="birthday-sequence" id="main-content" aria-live="polite">
-      <button className="birthday-sequence__skip" type="button" onClick={onDone}>
-        Continuer
-      </button>
-
       <div className="birthday-sky" aria-hidden="true">
         <span className="birthday-sky__stars" />
         <span className="birthday-sky__glow" />
@@ -373,10 +369,6 @@ function RevealSequence({ onDone }) {
       aria-live="polite"
       ref={rootRef}
     >
-      <button className="reveal-sequence__skip" type="button" onClick={onDone}>
-        Passer
-      </button>
-
       <div className="orbital-stage" aria-hidden="true">
         <span className="orbital-stage__sky" />
         {!reducedMotion && (
