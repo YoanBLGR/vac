@@ -1201,7 +1201,7 @@ h3 {
   background: oklch(12% 0.04 236);
   color: oklch(94% 0.015 200);
   contain: strict;
-  animation: orbital-finale 480ms 10.2s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  animation: orbital-finale 480ms 12.9s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
 /* Tout reste figé tant que la scène n'a pas donné le top départ. */
@@ -1315,7 +1315,7 @@ h3 {
     linear-gradient(0deg, oklch(94% 0.07 78 / 0.34), transparent 46%);
   opacity: 0;
   pointer-events: none;
-  animation: orbital-haze 1.5s 5.35s cubic-bezier(0.55, 0, 0.85, 0.35) forwards;
+  animation: orbital-haze 2.15s 5.25s ease-in-out forwards;
 }
 
 /* Pas de `overflow: hidden` ici : les ellipses floutées débordent de la boîte,
@@ -1326,7 +1326,7 @@ h3 {
   opacity: 0;
   pointer-events: none;
   transform: translate3d(-16%, 11%, 0) scale(1.2);
-  animation: orbital-cloud-pass 2.3s 4.75s cubic-bezier(0.5, 0, 0.4, 1) both;
+  animation: orbital-cloud-pass 1.9s 4.6s cubic-bezier(0.5, 0, 0.4, 1) both;
 }
 
 .orbital-stage__cloudpass::before,
@@ -1397,7 +1397,7 @@ h3 {
   pointer-events: none;
   animation:
     orbital-fade-in 460ms 0.3s var(--ease-out-expo) forwards,
-    orbital-fade-out 320ms 6.05s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-fade-out 320ms 5.75s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
 .orbital-hud__signal {
@@ -1572,8 +1572,8 @@ h3 {
   pointer-events: none;
   transform: translateY(1rem);
   animation:
-    orbital-copy-arrive 520ms 4.85s var(--ease-out-expo) forwards,
-    orbital-descent-leave 300ms 6.05s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-copy-arrive 520ms 6.75s var(--ease-out-expo) forwards,
+    orbital-descent-leave 300ms 9.05s cubic-bezier(0.7, 0, 0.84, 0) forwards;
   text-shadow: 0 0.14rem 1.5rem oklch(12% 0.04 220 / 0.72);
 }
 
@@ -1620,7 +1620,7 @@ h3 {
   text-shadow: 0 0.1rem 0.9rem oklch(10% 0.035 232 / 0.7);
   animation:
     orbital-fade-in 300ms 4.35s var(--ease-out-quart) forwards,
-    orbital-fade-out 280ms 6.05s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-fade-out 280ms 5.75s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
 .orbital-altitude > i {
@@ -1637,7 +1637,7 @@ h3 {
   inset: 0;
   background: linear-gradient(var(--sun), var(--coral));
   transform: translateY(-100%);
-  animation: orbital-altitude-drop 2.1s 4.5s var(--ease-out-quart) forwards;
+  animation: orbital-altitude-drop 1.3s 4.45s var(--ease-out-quart) forwards;
 }
 
 .orbital-coast {
@@ -1645,7 +1645,7 @@ h3 {
   overflow: hidden;
   opacity: 0;
   transform: scale(1.03);
-  animation: orbital-coast-arrive 1.35s 6.5s cubic-bezier(0.5, 0, 0.35, 1) forwards;
+  animation: orbital-coast-arrive 1.35s 9.4s cubic-bezier(0.5, 0, 0.35, 1) forwards;
 }
 
 .orbital-coast img {
@@ -1654,7 +1654,7 @@ h3 {
   object-fit: cover;
   object-position: center 60%;
   transform: scale(1.16) translate3d(-2.2%, 2.6%, 0);
-  animation: orbital-coast-camera 3.4s 6.5s var(--ease-out-quart) forwards;
+  animation: orbital-coast-camera 3.4s 9.4s var(--ease-out-quart) forwards;
 }
 
 .orbital-coast__veil {
@@ -1669,7 +1669,7 @@ h3 {
     radial-gradient(circle at 50% 46%, oklch(99% 0.07 84 / 0.98), oklch(93% 0.1 62 / 0.4) 28%, transparent 62%);
   mix-blend-mode: screen;
   opacity: 0;
-  animation: orbital-flare 1.4s 6.05s cubic-bezier(0.5, 0, 0.35, 1) both;
+  animation: orbital-flare 1.5s 9.15s cubic-bezier(0.5, 0, 0.35, 1) both;
 }
 
 .orbital-coast-copy {
@@ -1685,8 +1685,8 @@ h3 {
   pointer-events: none;
   transform: translateY(1.2rem);
   animation:
-    orbital-copy-arrive 580ms 7.45s var(--ease-out-expo) forwards,
-    orbital-copy-leave 280ms 8.55s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+    orbital-copy-arrive 580ms 10.15s var(--ease-out-expo) forwards,
+    orbital-copy-leave 280ms 11.25s cubic-bezier(0.7, 0, 0.84, 0) forwards;
   text-shadow: 0 0.14rem 1.5rem oklch(10% 0.03 220 / 0.6);
 }
 
@@ -1725,7 +1725,7 @@ h3 {
   font-weight: 750;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  animation-delay: 8.65s;
+  animation-delay: 11.35s;
 }
 
 .orbital-destination h1 {
@@ -1735,7 +1735,7 @@ h3 {
   letter-spacing: -0.085em;
   line-height: 0.8;
   text-shadow: 0 0.2rem 2.4rem oklch(10% 0.03 220 / 0.5);
-  animation-delay: 8.8s;
+  animation-delay: 11.5s;
 }
 
 .orbital-destination > div {
@@ -1747,7 +1747,7 @@ h3 {
   font-variant-numeric: tabular-nums;
   font-weight: 650;
   letter-spacing: 0.12em;
-  animation-delay: 9.02s;
+  animation-delay: 11.72s;
 }
 
 .orbital-destination > div i {
@@ -1756,7 +1756,7 @@ h3 {
   height: 1px;
   background: var(--sun);
   transform: scaleX(0);
-  animation: orbital-route-line 460ms 9.12s var(--ease-out-quart) forwards;
+  animation: orbital-route-line 460ms 11.82s var(--ease-out-quart) forwards;
 }
 
 .orbital-final-mark {
@@ -1776,7 +1776,7 @@ h3 {
   opacity: 0;
   text-transform: uppercase;
   transform: translateY(0.6rem);
-  animation: orbital-copy-arrive 420ms 9.35s var(--ease-out-quart) forwards;
+  animation: orbital-copy-arrive 420ms 12.05s var(--ease-out-quart) forwards;
 }
 
 .orbital-progress {
@@ -1792,7 +1792,7 @@ h3 {
   pointer-events: none;
   animation:
     orbital-fade-in 340ms 0.4s var(--ease-out-quart) forwards,
-    orbital-fade-out 240ms 6.15s linear forwards;
+    orbital-fade-out 240ms 5.85s linear forwards;
 }
 
 .orbital-progress span {
@@ -1801,7 +1801,7 @@ h3 {
   background: linear-gradient(90deg, var(--sea), var(--sun), var(--coral));
   transform: scaleX(0);
   transform-origin: left;
-  animation: orbital-progress 5.95s 0.45s linear forwards;
+  animation: orbital-progress 5.3s 0.45s linear forwards;
 }
 
 .orbital-progress i {
@@ -1814,7 +1814,7 @@ h3 {
   background: var(--sun);
   box-shadow: 0 0 1rem var(--sun);
   transform: translate(-50%, -50%);
-  animation: orbital-progress-dot 5.95s 0.45s linear forwards;
+  animation: orbital-progress-dot 5.3s 0.45s linear forwards;
 }
 
 @keyframes orbital-finale {
@@ -1833,10 +1833,17 @@ h3 {
 @keyframes orbital-haze {
   0% {
     opacity: 0;
-    transform: scale(1.1);
+    transform: scale(1.12);
+  }
+  46% {
+    opacity: 0.82;
+  }
+  58% {
+    opacity: 0.82;
+    transform: scale(1);
   }
   100% {
-    opacity: 0.78;
+    opacity: 0;
     transform: scale(1);
   }
 }

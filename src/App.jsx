@@ -51,7 +51,7 @@ const OrbitalScene = lazy(loadOrbitalScene);
  * sur `SCENE_DURATION` dans `OrbitalScene`. Le décompte ne démarre qu'une fois
  * la scène prête.
  */
-const REVEAL_DURATION = 10700;
+const REVEAL_DURATION = 13400;
 
 /**
  * Seul réglage de vitesse de la séquence. La chorégraphie reste écrite une fois

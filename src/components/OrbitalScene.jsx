@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { createLlogaraRelief } from "./llogara-relief";
 
 /**
  * Scène orbitale de la révélation.
@@ -21,7 +22,7 @@ import * as THREE from "three";
  * cette partition et les animations CSS du même facteur. Les secondes écrites
  * ci-dessous ne changent pas.
  */
-const SCENE_DURATION = 7.9;
+const SCENE_DURATION = 10.8;
 
 const DEG = Math.PI / 180;
 const EARTH_RADIUS = 2;
@@ -520,7 +521,14 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
     const disposables = [];
 
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+        // Permet de relire une image rendue hors du cycle d'affichage, pour
+        // inspecter la séquence temps par temps.
+        preserveDrawingBuffer: import.meta.env.DEV,
+      });
     } catch {
       // Sans contexte WebGL, le repli CSS prend la main et la séquence se
       // déroule quand même. On sort avant d'incrémenter le compteur de scènes :
@@ -538,6 +546,8 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
     renderer.setSize(mount.clientWidth, mount.clientHeight, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000, 0);
+    // Deux passes se succèdent (globe puis relief) : on maîtrise l'effacement.
+    renderer.autoClear = false;
     renderer.domElement.setAttribute("aria-hidden", "true");
     mount.appendChild(renderer.domElement);
 
@@ -578,6 +588,9 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
     earthGroup.add(atmosphere);
     disposables.push(atmosphere.geometry, atmosphereMaterial);
 
+    const relief = createLlogaraRelief({ portrait });
+    disposables.push(relief);
+
     const cameraDirection = new THREE.Vector3();
     const focusPoint = new THREE.Vector3();
     const sunDirection = new THREE.Vector3();
@@ -599,6 +612,7 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+      relief.setAspect(width / height);
     };
 
     let earth = null;
@@ -617,7 +631,7 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
       const fov = track(time, [
         [0, 38],
         [4.5, 38, linear],
-        [6.8, 50, easeInOutQuint],
+        [5.9, 50, easeInOutQuint],
       ]);
       if (Math.abs(camera.fov - fov) > 0.005) {
         camera.fov = fov;
@@ -625,7 +639,7 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
       }
 
       const approach = clamp01((time - 1.3) / 2.85);
-      const dive = clamp01((time - 4.5) / 2.3);
+      const dive = clamp01((time - 4.5) / 1.4);
       slerpDirection(viewStart, viewCruise, easeInOutCubic(approach), cameraDirection);
       if (dive > 0) slerpDirection(cameraDirection, viewTarget, easeInOutQuint(dive), cameraDirection);
 
@@ -638,7 +652,7 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
         [0, coverageDistance(0.55)],
         [1.3, coverageDistance(0.74), easeOutCubic],
         [4.5, coverageDistance(1.95)],
-        [6.8, EARTH_RADIUS + 1.6],
+        [5.9, EARTH_RADIUS + 1.6],
       ]);
 
       // Respiration très légère pour éviter le mouvement parfaitement mécanique.
@@ -656,7 +670,7 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
       focusPoint.set(0, distance * track(time, [
         [0, -0.058],
         [4.5, -0.05, linear],
-        [6.5, 0, easeInOutCubic],
+        [5.7, 0, easeInOutCubic],
       ]) * (portrait ? 1 : 0.45), 0);
 
       camera.up.set(0, 1, 0);
@@ -667,11 +681,11 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
         [0, 0.88],
         [1.4, 1, easeOutCubic],
         [5, 1.06, linear],
-        [6.8, 1.55, easeInQuad],
+        [5.9, 1.55, easeInQuad],
       ]);
       const haze = track(time, [
-        [5.3, 0],
-        [6.8, 1, easeInQuad],
+        [4.9, 0],
+        [5.9, 1, easeInQuad],
       ]);
 
       stars.material.uniforms.uTime.value = time;
@@ -709,7 +723,7 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
       ]);
       atmosphereMaterial.uniforms.uIntensity.value = track(time, [
         [4.5, 1],
-        [6.8, 2.6, easeInQuad],
+        [5.9, 2.6, easeInQuad],
       ]);
 
       // Départ et arrivée adoucis, mais vitesse de croisière franche : avec un
@@ -754,7 +768,20 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
         beacon.ring.scale.setScalar(1 + (1 - wave) * 1.7);
       });
 
-      renderer.render(scene, camera);
+      // Le globe s'efface derrière l'embrasement avant que sa texture ne cède ;
+      // le relief prend la suite dans le même mouvement.
+      const reliefPresence = relief.presence(time);
+      const globeVisible = time < 6.4;
+      earthGroup.visible = globeVisible;
+      stars.points.visible = globeVisible;
+
+      renderer.clear();
+      if (globeVisible) renderer.render(scene, camera);
+      if (reliefPresence > 0.001) {
+        relief.update(time);
+        if (globeVisible) renderer.clearDepth();
+        renderer.render(relief.scene, relief.camera);
+      }
       if (import.meta.env.DEV) mount.dataset.t = time.toFixed(2);
     };
 
@@ -811,6 +838,9 @@ export default function OrbitalScene({ onReady, onStart, timeScale = 1 }) {
       // le parent peut monter les calques DOM et lancer les deux horloges.
       resize();
       draw(0);
+      // Permet d'inspecter n'importe quel instant de la partition sans dépendre
+      // de l'horloge d'affichage.
+      if (import.meta.env.DEV) window.__orbitalDraw = draw;
       readyRef.current?.();
 
       // L'horloge démarre sur l'horodatage de la première image, pas sur

@@ -25,7 +25,7 @@ La révélation superpose deux horloges : la scène WebGL ([`src/components/Orbi
 
 ### Changer la vitesse
 
-Un seul réglage : `REVEAL_TIME_SCALE` dans [`src/App.jsx`](./src/App.jsx). Il étire d’un même facteur la scène 3D et les animations CSS, donc sans les désynchroniser. `1` correspond au tempo écrit (10,7 s), `2` le double (21,4 s).
+Un seul réglage : `REVEAL_TIME_SCALE` dans [`src/App.jsx`](./src/App.jsx). Il étire d’un même facteur la scène 3D et les animations CSS, donc sans les désynchroniser. `1` correspond au tempo écrit (13,4 s), `2` le double (26,8 s).
 
 Ne pas ralentir les deux séparément — c’est exactement ce qui faisait dériver les textes par rapport à la 3D dans les versions précédentes.
 
@@ -35,6 +35,7 @@ Trois valeurs doivent rester cohérentes entre elles. Elles sont écrites au tem
 
 - `SCENE_DURATION` dans `OrbitalScene.jsx` — la 3D s’arrête dès que la photo la recouvre ;
 - les délais du bloc `.reveal-orbital` dans `styles.css`, en secondes ;
+- les repères de l’acte du relief dans [`src/components/llogara-relief.js`](./src/components/llogara-relief.js), qui reçoit la même horloge ;
 - `REVEAL_DURATION` dans `App.jsx` — la durée totale avant de basculer sur le carnet.
 
 Les textures de la Terre et l’illustration finale sont préchargées pendant l’écran d’anniversaire : sans cela, la séquence démarre sur un temps mort et la côte apparaît avec un à-coup.
