@@ -42,6 +42,9 @@ export const trip = {
       coordinate: "39.768, 20.001",
     },
   ],
+  // `coordinate`, `note` et les horaires alimentent les fiches du livret papier
+  // (scripts/generate-booklet.mjs). Les notes reprennent ce que dit déjà
+  // l'itinéraire — distance à la plage, ce qu'on trouve devant l'hôtel.
   stays: [
     {
       name: "Blue Boutique Hotel",
@@ -49,6 +52,12 @@ export const trip = {
       dates: "31 juillet — 2 août",
       nights: "2 nuits",
       address: "Rruga e Plazhit, lagjia Angra, nr. 30, Dhërmi",
+      phone: "+355 69 352 5137",
+      coordinate: { lat: 40.1493814, lng: 19.6336064 },
+      checkIn: "Vendredi 31 juillet · 18:30",
+      checkOut: "Dimanche 2 août · 09:30",
+      dayIds: ["jul-31", "aug-01"],
+      note: "Six cents mètres de la plage, dix minutes à pied : le premier bain se fait le soir même, avant que la lumière ne tourne.",
       map: "https://www.google.com/maps/search/?api=1&query=Blue+Boutique+Hotel+Dhermi",
     },
     {
@@ -57,6 +66,11 @@ export const trip = {
       dates: "2 — 4 août",
       nights: "2 nuits",
       address: "St. Andre Dhima 4, Himarë",
+      coordinate: { lat: 40.092099, lng: 19.754866 },
+      checkIn: "Dimanche 2 août · 13:30",
+      checkOut: "Mardi 4 août · 08:00",
+      dayIds: ["aug-02", "aug-03"],
+      note: "Potam Beach est juste devant : ombre, baignade et sieste sans jamais reprendre la voiture.",
       map: "https://www.google.com/maps/search/?api=1&query=Emily%27s+Hotel+Himare",
     },
     {
@@ -65,6 +79,12 @@ export const trip = {
       dates: "4 — 6 août",
       nights: "2 nuits",
       address: "Rruga Freskia, Ksamil",
+      phone: "+355 69 311 4141",
+      coordinate: { lat: 39.763872, lng: 19.995399 },
+      checkIn: "Mardi 4 août · 14:00",
+      checkOut: "Jeudi 6 août · 09:00",
+      dayIds: ["aug-04", "aug-05"],
+      note: "Quatre minutes à pied de Lori Beach, avec un parking privé et un rooftop pour la fin de journée.",
       map: "https://www.google.com/maps/search/?api=1&query=Hotel+Siars+Ksamil",
     },
   ],
@@ -353,37 +373,54 @@ export const days = [
     id: "aug-02",
     dayLabel: "Dim. 2",
     dateLabel: "Dimanche 2 août",
-    title: "La crique cachée",
+    title: "La mer sans détour",
     place: "Dhërmi → Himarë",
     status: "ready",
-    mood: "Filikuri le matin, Potam l’après-midi, puis un château au-dessus de la mer.",
+    mood: "Potam sans contrainte le matin, une vraie pause l’après-midi, puis un château au-dessus de la mer.",
     events: [
       {
         time: "09:30",
         title: "Direction Himarë",
         type: "car",
         journey: { mode: "car", duration: "30 min" },
-        detail: "Check-out et route directe vers Emily’s Hotel. Dépôt des bagages et de la voiture vers 10:00.",
+        detail: "Check-out et route directe vers Emily’s Hotel. Dépôt des bagages et de la voiture vers 10:00, puis accès à pied à Potam Beach.",
+        tips: [
+          "Demander à l’hôtel de garder les bagages avant le check-in",
+          "Confirmer le stationnement et l’accès anticipé à la plage privée",
+        ],
         waze: destinations.emily,
       },
       {
-        time: "10:30",
-        title: "Filikuri, rien que l’eau",
-        type: "boat",
-        journey: { mode: "walk", duration: "5 min" },
-        detail: "Water taxi privé vers une petite crique de galets blancs, bordée de falaises sur trois côtés.",
-        location: {
-          label: "Voir Filikuri",
-          url: "https://www.google.com/maps?q=40.085900,19.751900",
-        },
-        tips: ["1,5 L d’eau par personne", "Retour prévu vers 12:40"],
-        contact: contacts.himaraWaterTaxi,
+        time: "10:15",
+        title: "Potam, la mer sans détour",
+        type: "swim",
+        journey: { mode: "walk", duration: "2 min" },
+        detail: "Option recommandée : rester sur Potam Beach, juste devant Emily’s Hotel. Eau claire, transats, ombre et aucun trajet supplémentaire avant le check-in.",
+        tips: [
+          "La plage publique reste accessible si l’espace privé de l’hôtel n’est pas encore disponible",
+          "Chaussures d’eau recommandées",
+          "Retour à l’hôtel vers 12:40",
+        ],
+        optionsLabel: "Baignade principale et alternative",
+        options: [
+          {
+            name: "Potam Beach",
+            note: "Recommandée · accès immédiat, plage aménagée et aucune difficulté avec les bagages",
+            url: "https://www.google.com/maps?q=40.094200,19.754700",
+          },
+          {
+            name: "Filikuri Beach",
+            note: "Alternative uniquement en bateau si l’aller-retour est confirmé · prévoir 1,5 L d’eau par personne et un retour vers 12:40",
+            url: "https://www.google.com/maps?q=40.085900,19.751900",
+            contact: contacts.himaraWaterTaxi,
+          },
+        ],
       },
       {
         time: "13:30",
         title: "Check-in à l’hôtel",
         type: "hotel",
-        journey: { mode: "walk", duration: "5 min" },
+        journey: { mode: "walk", duration: "2 min" },
         detail: "Check-in, dépôt du sac humide et changement rapide avant le déjeuner.",
       },
       {
@@ -399,7 +436,7 @@ export const days = [
         title: "Le luxe de ne rien faire",
         type: "rest",
         journey: { mode: "walk", duration: "2 min" },
-        detail: "Potam Beach, juste devant l’hôtel : ombre, baignade, lecture et sieste jusqu’à 17:10.",
+        detail: "Retour chez Emily pour une vraie sieste en chambre, ou prolongation tranquille sur Potam Beach à l’ombre, jusqu’à 17:10.",
       },
       {
         time: "18:20",

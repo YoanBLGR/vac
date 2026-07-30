@@ -35,6 +35,46 @@ const coverUri = `data:image/webp;base64,${(
     .toBuffer()
 ).toString("base64")}`;
 
+/** Une fiche d'hôtel par page. */
+const stayMarkup = (stay, index) => {
+  const rows = [
+    ["Adresse", stay.address],
+    ["Arrivée", stay.checkIn],
+    ["Départ", stay.checkOut],
+    ["Téléphone", stay.phone],
+  ].filter(([, value]) => value);
+
+  return `<section class="sheet sheet--fixed stay">
+    <p class="eyebrow">Étape ${index + 1} · ${escape(stay.place)}</p>
+    <h2>${escape(stay.name)}</h2>
+    <p class="stay__dates">${escape(stay.dates)} · ${escape(stay.nights)}</p>
+    ${stay.note ? `<p class="stay__note">${escape(stay.note)}</p>` : ""}
+    <div class="rule"></div>
+    <dl class="stay__facts">
+      ${rows.map(([label, value]) => `<dt>${escape(label)}</dt><dd>${escape(value)}</dd>`).join("")}
+    </dl>
+    ${
+      stay.dayIds?.length
+        ? `<div class="stay__days">
+            <p class="stay__days-label">Les journées depuis cette base</p>
+            ${stay.dayIds
+              .map((id) => {
+                const day = days.find((entry) => entry.id === id);
+                if (!day) return "";
+                const number = travelDays.indexOf(day) + 1;
+                return `<div class="stay__day">
+                  <p class="stay__day-count">Jour ${number}</p>
+                  <h3>${escape(day.title)}</h3>
+                  <p class="stay__day-mood">${escape(day.mood)}</p>
+                </div>`;
+              })
+              .join("")}
+          </div>`
+        : ""
+    }
+  </section>`;
+};
+
 /** Les journées sont numérotées pour la lecture, le retour reste à part. */
 const travelDays = days.filter((day) => day.status !== "return");
 const returnDay = days.find((day) => day.status === "return");
@@ -88,6 +128,8 @@ const dayMarkup = (day, index) => `<section class="sheet day">
   </header>
   <div class="events">${day.events.map(eventMarkup).join("")}</div>
 </section>`;
+
+const stayPages = trip.stays.map(stayMarkup).join("\n");
 
 /** Toutes les tables du séjour, rassemblées pour la fin du livret. */
 const tables = days.flatMap((day) =>
@@ -224,6 +266,25 @@ const html = `<!doctype html>
   dl { display: grid; grid-template-columns: auto 1fr; gap: 2mm 5mm; margin: 0; }
   dt { color: var(--ink-soft); font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; }
   dd { margin: 0; font-weight: 600; }
+
+  /* ---------- Fiches d'hôtel ---------- */
+  .stay { display: flex; flex-direction: column; }
+  .stay h2 { margin: 2.5mm 0 1.5mm; font-size: 26pt; letter-spacing: -0.035em; line-height: 1; }
+  .stay__dates { margin: 0; color: var(--sea); font-size: 9pt; font-weight: 650; letter-spacing: 0.06em; }
+  .stay__note { margin: 5mm 0 0; max-width: 94%; font-size: 10pt; font-style: italic; line-height: 1.6; }
+  .stay .rule { margin: 7mm 0 6mm; }
+
+  .stay__facts { grid-template-columns: 26mm 1fr; gap: 3.6mm 4mm; }
+  .stay__facts dt { padding-top: 0.5mm; font-size: 7.2pt; }
+  .stay__facts dd { font-size: 9.4pt; font-weight: 550; line-height: 1.4; }
+
+  .stay__days { margin-top: 8mm; }
+  .stay__days-label { margin: 0 0 4mm; color: var(--sun); font-size: 6.8pt; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
+  .stay__day { padding-left: 4mm; border-left: 2px solid var(--line); margin-bottom: 4.5mm; }
+  .stay__day:last-child { margin-bottom: 0; }
+  .stay__day-count { margin: 0 0 0.8mm; color: var(--ink-soft); font-size: 7pt; letter-spacing: 0.16em; text-transform: uppercase; }
+  .stay__day h3 { font-size: 13pt; letter-spacing: -0.02em; line-height: 1.1; }
+  .stay__day-mood { margin: 1.4mm 0 0; color: var(--ink-soft); font-size: 8.6pt; line-height: 1.45; }
 
   /* ---------- Journées ---------- */
   /* L'en-tête ne doit jamais se retrouver seul en bas d'une feuille. */
@@ -377,22 +438,7 @@ const html = `<!doctype html>
   </div>
 </section>
 
-<section class="sheet">
-  <h2>Où l’on dort</h2>
-  <div class="rule"></div>
-  <div class="grid">
-    ${trip.stays
-      .map(
-        (stay) => `<div class="card">
-          <p class="eyebrow">${escape(stay.place)} · ${escape(stay.nights)}</p>
-          <h3>${escape(stay.name)}</h3>
-          <p class="strong">${escape(stay.dates)}</p>
-          <p>${escape(stay.address)}</p>
-        </div>`,
-      )
-      .join("")}
-  </div>
-</section>
+${stayPages}
 
 ${travelDays.map(dayMarkup).join("\n")}
 
