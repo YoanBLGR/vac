@@ -557,7 +557,7 @@ function Hero() {
       <div className="hero__copy">
         <p className="eyebrow">{trip.eyebrow}</p>
         <h1>
-          Huit jours,
+          Sept jours,
           <br />
           <em>plein sud.</em>
         </h1>
@@ -801,6 +801,16 @@ function EventItem({ event, index }) {
                       <span className="event-options__copy">
                         <strong>{option.name}</strong>
                         <small>{option.note}</small>
+                        {option.reservation && (
+                          <span className="event-options__reservation">
+                            <span className="event-options__reservation-status">
+                              <Check size={14} aria-hidden="true" />
+                              {option.reservation.label}
+                            </span>
+                            <small>{option.reservation.detail}</small>
+                            {option.reservation.note && <small>{option.reservation.note}</small>}
+                          </span>
+                        )}
                       </span>
                       <ExternalLink size={15} aria-hidden="true" />
                     </a>

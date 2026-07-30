@@ -158,8 +158,8 @@ export const days = [
     mood: "Des nuages à la mer Ionienne, avec le col de Llogara comme première scène.",
     events: [
       {
-        time: "06:50",
-        title: "Rendez-vous à Beauvais",
+        time: "07:30",
+        title: "Rendez-vous à l’aéroport",
         type: "travel",
         detail: "Petit café avant de rejoindre la porte d’embarquement vers 08h30.",
         tips: ["Cartes d’embarquement hors ligne", "Passeports ou CNI accessibles", "Petit sac plage à portée de main"],
@@ -197,7 +197,7 @@ export const days = [
       },
       {
         time: "18:30",
-        title: "Blue Boutique, enfin",
+        title: "Arrivée à l’hôtel",
         type: "hotel",
         journey: { mode: "car", duration: "≈ 1 h" },
         detail: "Check-in rapide, petit sac de plage et direction l’eau. La plage se trouve à environ 600–700 mètres.",
@@ -265,7 +265,7 @@ export const days = [
           label: "Point de départ",
           url: "https://www.google.com/maps?q=40.136743,19.644893",
         },
-        tips: ["Option plage prolongée à confirmer", "Grottes accessibles selon l’état de la mer", "Budget indicatif : 100 € pour deux"],
+        tips: ["Option plage prolongée à confirmer", "Grottes accessibles selon l’état de la mer"],
         contact: contacts.dhermiBoatTours,
       },
       {
@@ -549,25 +549,29 @@ export const days = [
         contact: contacts.vilaHadhri,
       },
       {
-        time: "12:25",
+        time: "12:30",
         title: "Déjeuner entre Borsh et Qeparo",
         type: "food",
         journey: { mode: "car", duration: "5–20 min" },
-        detail: "Trois options solides à choisir la veille : Posidonas pour sa table face à la mer, Veranda pour sa cuisine albanaise familiale ou Sole Luna pour déjeuner directement sur Borsh Beach.",
+        detail: "Posidonas est réservé pour le déjeuner. Veranda et Sole Luna restent deux bonnes solutions de secours à proximité.",
         tips: [
-          "Posidonas · réservation : +355 69 512 1445",
+          "Posidonas · réservation confirmée pour 2 personnes à 12:30",
           "Veranda · réservation : +355 69 671 8488 · ouvre à midi",
           "Sole Luna · réservation : +355 69 566 2222",
           "Demander le poids et le prix total du poisson avant cuisson",
-          "Budget indicatif : 2 500 à 4 500 ALL pour deux",
           "Départ impératif vers 13:40 pour Porto Palermo",
           "Éviter l’alcool avant de reprendre la route",
         ],
-        optionsLabel: "Restaurant à choisir",
+        optionsLabel: "Restaurant réservé et alternatives",
         options: [
           {
             name: "Posidonas",
-            note: "Notre choix · terrasse face à la mer, poisson frais et étape idéale avant Porto Palermo",
+            note: "Poisson frais et étape idéale avant Porto Palermo",
+            reservation: {
+              label: "Réservation confirmée",
+              detail: "Lundi 3 août · 12:30 · 2 personnes · Yoan Boulanger",
+              note: "Table intérieure prévue. Terrasse face à la mer selon la météo et les disponibilités.",
+            },
             url: "https://www.google.com/maps/search/?api=1&query=Posidonas+Restaurant+Qeparo",
             waze: destinations.posidonas,
             contact: contacts.posidonas,
@@ -643,7 +647,6 @@ export const days = [
           "Réservation : +355 67 497 0164",
           "Demander une table extérieure au bord de l’eau",
           "Confirmer le poids et le prix du poisson entier avant cuisson",
-          "Budget indicatif : 3 000 à 5 000 ALL pour deux",
         ],
         location: {
           label: "Ouvrir Taverna Lefteri",
@@ -737,7 +740,6 @@ export const days = [
         detail: "Quatre minutes à pied suffisent pour rejoindre cette petite baie de sable, calme et turquoise, idéale le jour du transfert.",
         tips: [
           "Rejoindre la plage à pied, sans reprendre la voiture",
-          "Budget indicatif : 15 à 25 € pour deux transats et un parasol",
           "Baignade jusqu’à 12:45",
         ],
         location: {

@@ -198,24 +198,15 @@ const html = `<!doctype html>
   .cover__copy .eyebrow { color: #f0c48c; }
   .cover__copy h1 { margin: 3mm 0 2mm; font-size: 40pt; letter-spacing: -0.045em; line-height: 0.88; }
   .cover__copy p { margin: 0; font-size: 9pt; letter-spacing: 0.14em; text-transform: uppercase; }
-  .cover__mono {
-    position: absolute;
-    top: 8mm;
-    left: 9mm;
-    z-index: 1;
-    padding: 2.6mm 4mm;
-    border: 1px solid rgba(246, 239, 226, 0.5);
-    border-radius: 999px;
-    font-size: 7.5pt;
-    letter-spacing: 0.2em;
-  }
-
   /* ---------- Mot d'ouverture ---------- */
   .opening { display: flex; flex-direction: column; justify-content: center; }
   .opening h1 { font-size: 30pt; letter-spacing: -0.035em; line-height: 1.02; }
   .opening h1 em { display: block; color: var(--coral); font-style: normal; }
   .opening__text { margin: 8mm 0 0; max-width: 92%; font-size: 10.5pt; line-height: 1.65; }
-  .opening__sign { margin-top: 10mm; font-family: "Gloock", serif; font-size: 13pt; }
+  /* Le cœur signe la lettre. En SVG plutôt qu'en emoji : c'est du vectoriel,
+     donc net à n'importe quelle définition d'impression, la couleur est celle
+     de la palette, et il s'imprime même sans les graphiques d'arrière-plan. */
+  .opening__heart { display: block; width: 13mm; height: auto; margin-top: 11mm; fill: var(--coral); }
 
   /* ---------- Blocs généraux ---------- */
   .sheet > h2 { font-size: 22pt; letter-spacing: -0.03em; }
@@ -309,7 +300,6 @@ const html = `<!doctype html>
 <body>
 
 <section class="sheet sheet--cover">
-  <span class="cover__mono">N · E</span>
   <div class="cover__art">
     <img src="${coverUri}" alt="">
   </div>
@@ -324,16 +314,18 @@ const html = `<!doctype html>
   <p class="eyebrow">31 juillet · Pour toi</p>
   <h1>Joyeux anniversaire<em>mon cœur</em></h1>
   <p class="opening__text">
-    Voilà ce que je nous ai préparé : huit jours plein sud, entre le col de Llogara
-    et les îles de Ksamil. Des falaises qui tombent dans une mer trop bleue, des
-    criques qu’on n’atteint qu’en bateau, des châteaux posés au-dessus de l’eau,
-    et chaque soir un endroit choisi pour regarder le soleil disparaître.
+    Voilà ce que je nous ai préparé : sept jours plein sud, entre le col de Llogara
+    et les îles de Ksamil. Des falaises qui tombent dans une mer bleu turquoise,
+    des criques magnifiques, des châteaux posés au-dessus de l’eau, et chaque
+    soir un endroit choisi pour regarder le soleil disparaître.
   </p>
   <p class="opening__text">
     Ce carnet contient tout le programme. Tu peux le lire d’une traite, ou le
     garder pour découvrir chaque journée le matin même.
   </p>
-  <p class="opening__sign">À nous deux.</p>
+  <svg class="opening__heart" viewBox="0 0 360 360" role="img" aria-label="Cœur">
+    <path d="M180 294C160 272 70 214 70 132C70 88 100 64 135 64C158 64 174 77 180 95C186 77 202 64 225 64C260 64 290 88 290 132C290 214 200 272 180 294Z" />
+  </svg>
 </section>
 
 <section class="sheet">
@@ -352,7 +344,7 @@ const html = `<!doctype html>
   </div>
   <div class="rule" style="margin: 7mm 0 5mm"></div>
   <dl>
-    <dt>Durée</dt><dd>8 jours, 6 nuits</dd>
+    <dt>Durée</dt><dd>7 jours, 6 nuits</dd>
     <dt>Vol aller</dt><dd>${escape(trip.departure.date)} · ${escape(trip.departure.departureTime)}</dd>
     <dt>Vol retour</dt><dd>${escape(trip.returnFlight.date)} · ${escape(trip.returnFlight.departureTime)}</dd>
     <dt>Sur la route</dt><dd>${escape(trip.car.model)}, ${escape(trip.car.transmission.toLowerCase())}</dd>
@@ -451,7 +443,7 @@ ${travelDays.map(dayMarkup).join("\n")}
   <p class="eyebrow">7 août 2026</p>
   <h2>Et ce n’est<br>que le début.</h2>
   <p>
-    Huit jours de mer, de pierre et de lumière. Le reste, on l’écrira sur place —
+    Sept jours de mer, de pierre et de lumière. Le reste, on l’écrira sur place —
     les détours imprévus, les tables qu’on n’avait pas réservées, les baignades
     trop longues.
   </p>
