@@ -251,11 +251,15 @@ function LockedScreen({ canReveal, onReveal }) {
       <div className="locked-screen__action">
         <button className="seal-button" type="button" disabled={!canReveal} onClick={onReveal}>
           <span className="seal-button__icon">
-            {canReveal ? <Sparkles size={19} /> : <Clock3 size={19} />}
+            {canReveal ? <MapPin size={19} /> : <Clock3 size={19} />}
           </span>
           <span>
-            <strong>{canReveal ? "Briser le sceau" : "Encore un peu de patience"}</strong>
-            <small>{canReveal ? "La destination est prête" : "Ouverture vendredi 31 juillet à minuit"}</small>
+            <strong>{canReveal ? "Découvrir la destination" : "Encore un peu de patience"}</strong>
+            <small>
+              {canReveal
+                ? "Et le programme des sept jours"
+                : "Ouverture vendredi 31 juillet à minuit"}
+            </small>
           </span>
           <ArrowRight size={20} aria-hidden="true" />
         </button>
