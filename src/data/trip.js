@@ -215,11 +215,17 @@ export const days = [
         time: "19:40",
         title: "Dîner face au soleil",
         type: "food",
-        detail: "Trois belles tables face à la mer pour le coucher du soleil vers 19:58. Réserver pour 19:40 et demander une place en première ligne.",
+        detail: "Platinium est réservé pour le dîner face au coucher du soleil. Noah on the Beach et Olio restent deux alternatives à proximité.",
+        optionsLabel: "Restaurant réservé et alternatives",
         options: [
           {
             name: "Platinium",
-            note: "Notre choix · cuisine soignée, service très apprécié",
+            note: "Cuisine soignée, service très apprécié et vue sur la mer",
+            reservation: {
+              label: "Réservation confirmée",
+              detail: "Vendredi 31 juillet · 19:40 · 2 personnes · Yoan Boulanger",
+              note: "Table extérieure face à la mer demandée lors de la réservation.",
+            },
             url: "https://www.google.com/maps/search/?api=1&query=Platinium+Dhermi",
             contact: contacts.platinium,
           },
@@ -370,7 +376,7 @@ export const days = [
           label: "Voir Filikuri",
           url: "https://www.google.com/maps?q=40.085900,19.751900",
         },
-        tips: ["Aucun bar, aucune toilette", "1,5 L d’eau par personne", "Retour prévu vers 12:40"],
+        tips: ["1,5 L d’eau par personne", "Retour prévu vers 12:40"],
         contact: contacts.himaraWaterTaxi,
       },
       {
@@ -474,7 +480,7 @@ export const days = [
         type: "food",
         journey: { mode: "walk", duration: "5 min" },
         detail: "Petit-déjeuner nourrissant chez Astro : œufs ou omelette, toast ou pancakes à partager, fruits ou yaourt, café et eau pour la voiture.",
-        tips: ["Départ impératif à 07:30 pour monter à Borsh avant la chaleur"],
+        tips: ["Départ à 07:30 pour monter à Borsh avant la chaleur"],
         location: {
           label: "Ouvrir Astro",
           url: "https://www.google.com/maps/search/?api=1&query=Astro+Brunch%26Cocktail+Bar+Himare",
@@ -521,7 +527,6 @@ export const days = [
         tips: [
           "Arrêt de 20 min · stationnement directement devant",
           "Ne pas déjeuner ici",
-          "Pour tout poisson au poids, demander le prix écrit avant de commander",
         ],
         location: {
           label: "Ouvrir Ujvara Borsh",
@@ -558,9 +563,6 @@ export const days = [
           "Posidonas · réservation confirmée pour 2 personnes à 12:30",
           "Veranda · réservation : +355 69 671 8488 · ouvre à midi",
           "Sole Luna · réservation : +355 69 566 2222",
-          "Demander le poids et le prix total du poisson avant cuisson",
-          "Départ impératif vers 13:40 pour Porto Palermo",
-          "Éviter l’alcool avant de reprendre la route",
         ],
         optionsLabel: "Restaurant réservé et alternatives",
         options: [
@@ -646,7 +648,6 @@ export const days = [
         tips: [
           "Réservation : +355 67 497 0164",
           "Demander une table extérieure au bord de l’eau",
-          "Confirmer le poids et le prix du poisson entier avant cuisson",
         ],
         location: {
           label: "Ouvrir Taverna Lefteri",
@@ -694,7 +695,7 @@ export const days = [
         type: "food",
         journey: { mode: "walk", duration: "2 min" },
         detail: "Un petit-déjeuner complet mais rapide juste en face de l’hôtel : œufs ou pancakes, fruits ou yaourt, café et une grande bouteille d’eau.",
-        tips: ["Départ impératif à 08:40"],
+        tips: ["Départ à 08:40"],
         location: {
           label: "Ouvrir Orzo",
           url: "https://www.google.com/maps/search/?api=1&query=Orzo+Summer+Edition+Himare",
@@ -918,7 +919,6 @@ export const days = [
         detail: "Table extérieure à l’ombre chez The Mussel House : moules saganaki ou à la crème, linguine aux moules, salade fraîche et trilece à partager.",
         tips: [
           "Demander une table au bord de l’eau",
-          "Pour tout poisson au poids, confirmer le poids et le prix total avant la cuisson",
           "Départ vers 13:30",
         ],
         location: {
@@ -1138,7 +1138,7 @@ export const days = [
         type: "walk",
         journey: { mode: "walk", duration: "15 min" },
         detail: "Redescendre directement vers Çerçiz Topulli pour reprendre la voiture sans dépasser l’horaire limite.",
-        tips: ["Départ impératif à 14:40"],
+        tips: ["Départ à 14:40"],
       },
       {
         time: "14:40",
@@ -1174,7 +1174,7 @@ export const days = [
         detail: "Dîner en terrasse au Ballkoni i Prezës avec le soleil couchant vers 19:52 et toute la plaine à l’horizon.",
         tips: [
           "Réserver la table avec la meilleure vue : +355 69 482 3317",
-          "Prévenir le serveur du départ impératif à 20:10",
+          "Prévenir le serveur du départ à 20:10",
           "Demander l’addition suffisamment tôt",
         ],
         location: {

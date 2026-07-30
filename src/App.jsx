@@ -309,7 +309,7 @@ function BirthdaySequence({ onDone }) {
       </div>
 
       <section className="birthday-copy">
-        <p>31 juillet · Pour toi</p>
+        <p>31 juillet</p>
         <h1 aria-label="Joyeux anniversaire mon cœur">
           <span>Joyeux anniversaire</span>
           <em>mon cœur</em>

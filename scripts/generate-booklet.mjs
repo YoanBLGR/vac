@@ -51,7 +51,7 @@ const eventMarkup = (event) => {
 
   const options = event.options?.length
     ? `<div class="options">
-        <p class="options__label">${escape(event.optionsLabel ?? "Nos tables")}</p>
+        <p class="options__label">${escape(event.optionsLabel ?? "À choisir")}</p>
         <ul>
           ${event.options
             .map(
@@ -311,7 +311,7 @@ const html = `<!doctype html>
 </section>
 
 <section class="sheet sheet--fixed sheet--panel opening">
-  <p class="eyebrow">31 juillet · Pour toi</p>
+  <p class="eyebrow">31 juillet</p>
   <h1>Joyeux anniversaire<em>mon cœur</em></h1>
   <p class="opening__text">
     Voilà ce que je nous ai préparé : sept jours plein sud, entre le col de Llogara
@@ -441,13 +441,12 @@ ${travelDays.map(dayMarkup).join("\n")}
 
 <section class="sheet sheet--fixed sheet--panel closing">
   <p class="eyebrow">7 août 2026</p>
-  <h2>Et ce n’est<br>que le début.</h2>
   <p>
     Sept jours de mer, de pierre et de lumière. Le reste, on l’écrira sur place —
-    les détours imprévus, les tables qu’on n’avait pas réservées, les baignades
-    trop longues.
+    les détours qu’on n’avait pas vus venir, les tables qu’on n’avait pas
+    réservées, les baignades plus longues que prévu.
   </p>
-  <p class="closing__mark">Notre échappée · Albanie</p>
+  <p class="closing__mark">Albanie</p>
 </section>
 
 </body>
