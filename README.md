@@ -40,6 +40,18 @@ Trois valeurs doivent rester cohérentes entre elles. Elles sont écrites au tem
 
 Les textures de la Terre et l’illustration finale sont préchargées pendant l’écran d’anniversaire : sans cela, la séquence démarre sur un temps mort et la côte apparaît avec un à-coup.
 
+## Le livret imprimable
+
+```powershell
+npm run booklet
+```
+
+Génère `livret-albanie.html` à partir des mêmes données que l’app — rien n’est recopié à la main, le livret suit [`src/data/trip.js`](./src/data/trip.js) à chaque régénération. Le fichier est autonome : polices et illustration incluses, il s’ouvre et s’imprime depuis n’importe où.
+
+Pour obtenir le PDF : ouvrir le fichier, **Ctrl+P**, format **A5**, et cocher **Graphiques d’arrière-plan** — sans quoi la couverture et les aplats crème disparaissent. Le résultat fait 32 pages A5, soit 16 feuilles A4 en impression deux pages par feuille recto-verso.
+
+Les pages composées (couverture, mot d’ouverture, page finale) ont une hauteur arrêtée ; les journées coulent sur autant de feuilles qu’il leur en faut, sans jamais couper un moment en deux. Les marges vivent dans `@page` et non dans les éléments : c’est ce qui permet à une journée de garder sa marge haute sur sa seconde feuille.
+
 ## Compléter le programme
 
 Toutes les informations du voyage sont centralisées dans [`src/data/trip.js`](./src/data/trip.js).
