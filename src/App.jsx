@@ -30,6 +30,7 @@ import {
   Luggage,
   Map,
   MapPin,
+  MessageCircle,
   Navigation,
   Palmtree,
   PersonStanding,
@@ -69,6 +70,27 @@ const REVEAL_TIME_SCALE = 2;
 const REVEAL_STAGE_TIMEOUT = 3000;
 const VOUCHER_ASSET_URL = "/private/car-rental-voucher.bin";
 const VOUCHER_STORAGE_KEY = "albania-car-voucher-key";
+const DEFAULT_WHATSAPP_MESSAGE =
+  "Hello,\n\nI would like to contact you about a reservation or activity for two people. Could you please help me?\n\nThank you very much. Have a nice day.\n\nYoan BOULANGER";
+
+function getWhatsAppUrl(contact) {
+  const phone = (contact.whatsapp ?? contact.phone ?? "").replace(/\D/g, "");
+
+  if (!phone) {
+    return null;
+  }
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(contact.message ?? DEFAULT_WHATSAPP_MESSAGE)}`;
+}
+
+function getWazeUrl(destination) {
+  if (!Number.isFinite(destination?.lat) || !Number.isFinite(destination?.lng)) {
+    return null;
+  }
+
+  const coordinates = encodeURIComponent(`${destination.lat},${destination.lng}`);
+  return `https://waze.com/ul?ll=${coordinates}&navigate=yes&utm_source=echappee_albanaise`;
+}
 
 function decodeVoucherKey(value) {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -672,6 +694,53 @@ function DaySelector({ selectedId, onSelect }) {
   );
 }
 
+function WhatsAppLink({ contact, compact = false }) {
+  const url = getWhatsAppUrl(contact);
+
+  if (!url) {
+    return null;
+  }
+
+  return (
+    <a
+      className={compact ? "whatsapp-link whatsapp-link--compact" : "whatsapp-link"}
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Contacter ${contact.label ?? "ce lieu"} sur WhatsApp au ${contact.phone}`}
+    >
+      <MessageCircle size={compact ? 15 : 17} strokeWidth={2} aria-hidden="true" />
+      <span>
+        <strong>WhatsApp</strong>
+        <small>{contact.label ? `${contact.label} · ${contact.phone}` : contact.phone}</small>
+      </span>
+      <ExternalLink size={13} aria-hidden="true" />
+    </a>
+  );
+}
+
+function WazeLink({ destination, compact = false }) {
+  const url = getWazeUrl(destination);
+
+  if (!url) {
+    return null;
+  }
+
+  return (
+    <a
+      className={compact ? "waze-link waze-link--compact" : "waze-link"}
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Lancer Waze vers ${destination.label}`}
+    >
+      <Navigation size={compact ? 15 : 16} strokeWidth={2} aria-hidden="true" />
+      <span>{compact ? "Waze" : `Waze · ${destination.label}`}</span>
+      <ExternalLink size={13} aria-hidden="true" />
+    </a>
+  );
+}
+
 function EventItem({ event, index }) {
   const [open, setOpen] = useState(index === 0);
   const Icon = eventIcons[event.type] || CircleEllipsis;
@@ -726,24 +795,55 @@ function EventItem({ event, index }) {
               <span className="event-options__label">{event.optionsLabel ?? "Meilleures options"}</span>
               <div className="event-options__list">
                 {event.options.map((option, optionIndex) => (
-                  <a href={option.url} target="_blank" rel="noreferrer" key={option.name}>
-                    <span className="event-options__rank">{String(optionIndex + 1).padStart(2, "0")}</span>
-                    <span className="event-options__copy">
-                      <strong>{option.name}</strong>
-                      <small>{option.note}</small>
-                    </span>
-                    <ExternalLink size={15} aria-hidden="true" />
-                  </a>
+                  <div className="event-options__item" key={option.name}>
+                    <a className="event-options__map" href={option.url} target="_blank" rel="noreferrer">
+                      <span className="event-options__rank">{String(optionIndex + 1).padStart(2, "0")}</span>
+                      <span className="event-options__copy">
+                        <strong>{option.name}</strong>
+                        <small>{option.note}</small>
+                      </span>
+                      <ExternalLink size={15} aria-hidden="true" />
+                    </a>
+                    {(option.waze || option.contact) && (
+                      <div className="event-options__actions">
+                        {option.waze && <WazeLink destination={option.waze} compact />}
+                        {option.contact && <WhatsAppLink contact={option.contact} compact />}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
-          {event.location && (
-            <a className="map-link" href={event.location.url} target="_blank" rel="noreferrer">
-              <MapPin size={16} />
-              {event.location.label}
-              <ExternalLink size={14} />
-            </a>
+          {event.contact && (
+            <div className="event-contact">
+              <span className="event-options__label">Contact direct</span>
+              <WhatsAppLink contact={event.contact} />
+            </div>
+          )}
+          {event.contactUnavailable && (
+            <div className="event-contact-unavailable">
+              <Info size={15} aria-hidden="true" />
+              <span>{event.contactUnavailable}</span>
+            </div>
+          )}
+          {(event.location || event.waze) && (
+            <div className="event-links">
+              {event.location && (
+                <a className="map-link" href={event.location.url} target="_blank" rel="noreferrer">
+                  <MapPin size={16} />
+                  {event.location.label}
+                  <ExternalLink size={14} />
+                </a>
+              )}
+              {event.waze && <WazeLink destination={event.waze} />}
+            </div>
+          )}
+          {event.wazeUnavailable && (
+            <div className="event-route-note">
+              <Info size={15} aria-hidden="true" />
+              <span>{event.wazeUnavailable}</span>
+            </div>
           )}
         </div>
       </div>
@@ -889,9 +989,6 @@ function RouteView() {
             <dd>{trip.car.return}</dd>
           </div>
         </dl>
-        <p className="car-ticket__payment">
-          <Check size={16} /> {trip.car.paid} · {trip.car.due}
-        </p>
       </section>
 
       <section className="return-ticket">

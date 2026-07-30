@@ -3253,13 +3253,20 @@ h3 {
   border-top: 1px solid var(--line);
 }
 
-.event-options__list > a {
+.event-options__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
+  border-bottom: 1px solid var(--line);
+}
+
+.event-options__map {
   display: grid;
   min-height: 4.25rem;
   grid-template-columns: 1.65rem 1fr auto;
   align-items: center;
   gap: var(--space-sm);
-  border-bottom: 1px solid var(--line);
   color: var(--ink);
   text-decoration: none;
   transition: color 180ms var(--ease-out-quart), transform 180ms var(--ease-out-quart);
@@ -3287,8 +3294,130 @@ h3 {
   line-height: 1.4;
 }
 
-.event-options__list > a > svg {
+.event-options__map > svg {
   color: var(--sea);
+}
+
+.event-options__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.event-contact {
+  display: grid;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.whatsapp-link {
+  display: grid;
+  min-height: 3.25rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
+  border: 1px solid color-mix(in srgb, var(--success) 36%, var(--line));
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: color-mix(in srgb, var(--success) 8%, transparent);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    border-color 180ms var(--ease-out-quart),
+    background 180ms var(--ease-out-quart),
+    transform 180ms var(--ease-out-quart);
+}
+
+.whatsapp-link > svg {
+  color: var(--success);
+}
+
+.whatsapp-link > span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.whatsapp-link strong {
+  color: var(--success);
+  font-size: var(--text-xs);
+}
+
+.whatsapp-link small {
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.whatsapp-link--compact {
+  min-height: 2.55rem;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.whatsapp-link--compact small {
+  display: none;
+}
+
+.waze-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-xs);
+  border: 1px solid color-mix(in srgb, var(--sea) 38%, var(--line));
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: color-mix(in srgb, var(--sea) 8%, transparent);
+  color: var(--sea);
+  font-size: var(--text-xs);
+  font-weight: 750;
+  text-decoration: none;
+  transition:
+    border-color 180ms var(--ease-out-quart),
+    background 180ms var(--ease-out-quart),
+    transform 180ms var(--ease-out-quart);
+}
+
+.waze-link--compact {
+  min-height: 2.55rem;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+@media (max-width: 560px) {
+  .event-options__item {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-bottom: var(--space-sm);
+  }
+
+  .event-options__actions {
+    flex-wrap: wrap;
+    margin-left: 2.5rem;
+  }
+}
+
+.event-contact-unavailable,
+.event-route-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+.event-contact-unavailable svg,
+.event-route-note svg {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+  color: var(--coral);
+}
+
+.event-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
 }
 
 .map-link {
@@ -3296,7 +3425,6 @@ h3 {
   min-height: 2.75rem;
   align-items: center;
   gap: var(--space-xs);
-  margin-top: var(--space-md);
   color: var(--sea);
   font-size: var(--text-xs);
   font-weight: 700;
@@ -4965,9 +5093,21 @@ h3 {
     color: var(--sea);
   }
 
-  .event-options__list > a:hover {
+  .event-options__map:hover {
     transform: translateX(0.2rem);
     color: var(--sea);
+  }
+
+  .whatsapp-link:hover {
+    border-color: var(--success);
+    background: color-mix(in srgb, var(--success) 14%, transparent);
+    transform: translateY(-0.1rem);
+  }
+
+  .waze-link:hover {
+    border-color: var(--sea);
+    background: color-mix(in srgb, var(--sea) 14%, transparent);
+    transform: translateY(-0.1rem);
   }
 
   .stay > a:hover {

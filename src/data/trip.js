@@ -74,9 +74,77 @@ export const trip = {
     pickup: "31 juillet · 13:15",
     return: "6 août · 21:45",
     location: "Aéroport de Tirana",
-    paid: "243,18 € réglés",
-    due: "48,63 € à confirmer",
   },
+};
+
+const contacts = {
+  blueBoutique: { label: "Blue Boutique Hotel", phone: "+355 69 352 5137" },
+  platinium: { label: "Platinium Dhërmi", phone: "+355 69 402 0121" },
+  noah: { label: "Noah on the Beach", phone: "+355 69 662 2222" },
+  olio: { label: "Olio", phone: "+355 67 204 1982" },
+  dhermiBoatTours: { label: "Dhërmi Boat Tours", phone: "+355 67 201 8245" },
+  vela: { label: "Vela e Bardhë", phone: "+355 69 249 5207" },
+  drymades: { label: "Drymades / 360° Sunset Bar", phone: "+355 69 600 9700" },
+  amiciViaHotel: {
+    label: "Via Blue Boutique Hotel",
+    phone: "+355 69 352 5137",
+    message:
+      "Hello,\n\nCould you please help us reserve a table for two people at Grill House Amici on 1 August 2026 at 8:30 PM, under the name Yoan BOULANGER?\n\nThank you very much. Have a nice day.\n\nYoan BOULANGER",
+  },
+  fevan: { label: "Taverna Fevan", phone: "+355 68 330 0908" },
+  panoramaDhermi: { label: "Panorama Dhërmi", phone: "+355 69 331 8019" },
+  himaraWaterTaxi: { label: "Himara WaterTaxi", phone: "+355 69 564 6999" },
+  luiPotam: { label: "Lui Potam", phone: "+355 69 442 2533" },
+  cafeButterfly: { label: "Café Butterfly", phone: "+355 69 306 1212" },
+  figOlive: { label: "Fig & Olive", phone: "+355 68 905 0872" },
+  elea: { label: "ELÉA Restaurant", phone: "+355 68 278 6200" },
+  lefteri: { label: "Taverna Lefteri", phone: "+355 67 497 0164" },
+  astro: { label: "Astro Brunch & Cocktail Bar", phone: "+355 69 611 7515" },
+  ujvara: { label: "Ujvara Borsh", phone: "+355 69 967 7801" },
+  vilaHadhri: { label: "Vila Hadhri Borsh", phone: "+355 69 481 7374" },
+  posidonas: { label: "Posidonas", phone: "+355 69 512 1445" },
+  veranda: { label: "Veranda Restaurant", phone: "+355 69 671 8488" },
+  soleLuna: { label: "Sole Luna Restaurant", phone: "+355 69 566 2222" },
+  orzo: { label: "Orzo Summer Edition", phone: "+355 69 699 4771" },
+  siars: { label: "Hotel Siars", phone: "+355 69 311 4141" },
+  loriBeach: { label: "Lori Beach", phone: "+355 69 216 0216" },
+  butrint: { label: "Parc national de Butrint", phone: "+355 69 226 6969" },
+  guvat: { label: "Guvat Bar Restorant", phone: "+355 68 543 2183" },
+  musselHouse: { label: "The Mussel House", phone: "+355 69 232 9231" },
+  ksamilWaterSport: { label: "Ksamil Water Sport", phone: "+355 69 522 3077" },
+  porta: { label: "Porta Ksamil", phone: "+355 69 744 6569" },
+  mendra: { label: "Mëndra", phone: "+355 68 469 4595" },
+  visitGjirokastra: { label: "Visit Gjirokastra", phone: "+355 69 409 8988" },
+  kardhashi: { label: "Taverna Kardhashi", phone: "+355 69 366 7830" },
+  skenduli: { label: "Maison Skënduli", phone: "+355 69 409 8988" },
+  ballkoni: { label: "Ballkoni i Prezës", phone: "+355 69 482 3317" },
+};
+
+const noDirectWhatsApp = "Lieu public · aucun contact WhatsApp direct et fiable n’est publié.";
+
+const destinations = {
+  llogara: { label: "Panorama de Llogara", lat: 40.188045, lng: 19.599273 },
+  blueBoutique: { label: "Blue Boutique Hotel", lat: 40.1493814, lng: 19.6336064 },
+  drymadesBeach: { label: "Drymades Beach", lat: 40.15949, lng: 19.6004 },
+  oldDhermi: { label: "Vieux Dhërmi", lat: 40.152998, lng: 19.642769 },
+  drymadesSunset: { label: "360° Sunset Bar", lat: 40.15471, lng: 19.61158 },
+  emily: { label: "Emily’s Hotel", lat: 40.092099, lng: 19.754866 },
+  himaraCastle: { label: "Château d’Himarë", lat: 40.11778, lng: 19.73167 },
+  borshCastle: { label: "Château de Borsh", lat: 40.069896, lng: 19.8561846 },
+  ujvara: { label: "Ujvara Borsh", lat: 40.06406, lng: 19.85537 },
+  borshBeach: { label: "Borsh Beach", lat: 40.045, lng: 19.85377 },
+  posidonas: { label: "Posidonas", lat: 40.0412, lng: 19.8167 },
+  veranda: { label: "Veranda Restaurant", lat: 40.0580164, lng: 19.8216573 },
+  soleLuna: { label: "Sole Luna Restaurant", lat: 40.0469375, lng: 19.8504375 },
+  portoPalermo: { label: "Porto Palermo", lat: 40.06217, lng: 19.7907 },
+  siars: { label: "Hotel Siars", lat: 39.763872, lng: 19.995399 },
+  butrintParking: { label: "Parking de Butrint", lat: 39.745362, lng: 20.017816 },
+  blueEye: { label: "Parking du Blue Eye", lat: 39.916722, lng: 20.181611 },
+  musselHouse: { label: "The Mussel House", lat: 39.788579, lng: 20.011355 },
+  gjirokastraParking: { label: "Parking Çerçiz Topulli", lat: 40.074906, lng: 20.140111 },
+  preze: { label: "Ballkoni i Prezës", lat: 41.43046, lng: 19.67227 },
+  airportFuel: { label: "Station Kastrati près de TIA", lat: 41.427086, lng: 19.737506 },
+  tiranaAirport: { label: "Aéroport de Tirana", lat: 41.4192386, lng: 19.7141524 },
 };
 
 export const days = [
@@ -124,6 +192,8 @@ export const days = [
           "35 à 45 min",
           "Vêtement léger pour le vent",
         ],
+        waze: destinations.llogara,
+        contactUnavailable: noDirectWhatsApp,
       },
       {
         time: "18:30",
@@ -131,6 +201,7 @@ export const days = [
         type: "hotel",
         journey: { mode: "car", duration: "≈ 1 h" },
         detail: "Check-in rapide, petit sac de plage et direction l’eau. La plage se trouve à environ 600–700 mètres.",
+        waze: destinations.blueBoutique,
       },
       {
         time: "18:50",
@@ -138,6 +209,7 @@ export const days = [
         type: "swim",
         journey: { mode: "walk", duration: "10 min" },
         detail: "Une baignade dans une mer autour de 25–27 °C, avant que la lumière ne devienne dorée.",
+        contact: contacts.blueBoutique,
       },
       {
         time: "19:40",
@@ -149,16 +221,19 @@ export const days = [
             name: "Platinium",
             note: "Notre choix · cuisine soignée, service très apprécié",
             url: "https://www.google.com/maps/search/?api=1&query=Platinium+Dhermi",
+            contact: contacts.platinium,
           },
           {
             name: "Noah on the Beach",
             note: "Plus intime · poissons et fruits de mer au bord de l’eau",
             url: "https://www.google.com/maps/search/?api=1&query=Noah+on+the+Beach+Dhermi",
+            contact: contacts.noah,
           },
           {
             name: "Olio",
             note: "Plus animé · cuisine italienne, seafood et cocktails",
             url: "https://www.google.com/maps/search/?api=1&query=Olio+Dhermi",
+            contact: contacts.olio,
           },
         ],
       },
@@ -178,6 +253,7 @@ export const days = [
         title: "Petit-déjeuner à l’hôtel",
         type: "food",
         detail: "Buffet au Blue Boutique. Préparer maillots, chaussures d’eau, masque, tuba et pochette étanche.",
+        contact: contacts.blueBoutique,
       },
       {
         time: "09:00",
@@ -190,12 +266,14 @@ export const days = [
           url: "https://www.google.com/maps?q=40.136743,19.644893",
         },
         tips: ["Option plage prolongée à confirmer", "Grottes accessibles selon l’état de la mer", "Budget indicatif : 100 € pour deux"],
+        contact: contacts.dhermiBoatTours,
       },
       {
         time: "13:00",
         title: "Déjeuner les pieds dans le bleu",
         type: "food",
         detail: "Vela e Bardhë sur le front de mer : légumes à partager, calamars ou poulpe, poisson grillé et café.",
+        contact: contacts.vela,
       },
       {
         time: "14:30",
@@ -208,6 +286,8 @@ export const days = [
           url: "https://www.google.com/maps?q=40.159490,19.600400",
         },
         tips: ["Chaussures d’eau", "Espèces pour parking et transats", "Quitter Drymades vers 17:10 pour se changer avant le vieux Dhërmi"],
+        waze: destinations.drymadesBeach,
+        contact: contacts.drymades,
       },
       {
         time: "18:15",
@@ -219,6 +299,8 @@ export const days = [
           label: "Voir le monastère",
           url: "https://www.google.com/maps?q=40.152998,19.642769",
         },
+        waze: destinations.oldDhermi,
+        contactUnavailable: noDirectWhatsApp,
       },
       {
         time: "19:15",
@@ -230,6 +312,8 @@ export const days = [
           label: "Ouvrir le rooftop",
           url: "https://www.google.com/maps?q=40.154710,19.611580",
         },
+        waze: destinations.drymadesSunset,
+        contact: contacts.drymades,
       },
       {
         time: "20:30",
@@ -241,16 +325,19 @@ export const days = [
             name: "Grill House Amici",
             note: "Notre choix · grillades, cuisine méditerranéenne et terrasse végétale",
             url: "https://www.google.com/maps/search/?api=1&query=Grill+House+Amici+Dhermi",
+            contact: contacts.amiciViaHotel,
           },
           {
             name: "Taverna Fevan",
             note: "Le plus authentique · cuisine albanaise familiale et généreuse",
             url: "https://www.google.com/maps?q=40.160286,19.628166",
+            contact: contacts.fevan,
           },
           {
             name: "Panorama Dhërmi",
             note: "Pour la vue · cuisine simple et prix raisonnables",
             url: "https://www.google.com/maps/search/?api=1&query=Panorama+Dhermi",
+            contact: contacts.panoramaDhermi,
           },
         ],
       },
@@ -271,6 +358,7 @@ export const days = [
         type: "car",
         journey: { mode: "car", duration: "30 min" },
         detail: "Check-out et route directe vers Emily’s Hotel. Dépôt des bagages et de la voiture vers 10:00.",
+        waze: destinations.emily,
       },
       {
         time: "10:30",
@@ -283,6 +371,7 @@ export const days = [
           url: "https://www.google.com/maps?q=40.085900,19.751900",
         },
         tips: ["Aucun bar, aucune toilette", "1,5 L d’eau par personne", "Retour prévu vers 12:40"],
+        contact: contacts.himaraWaterTaxi,
       },
       {
         time: "13:30",
@@ -297,6 +386,7 @@ export const days = [
         type: "food",
         journey: { mode: "walk", duration: "5 min" },
         detail: "Poulpe ou crevettes à partager, poisson entier grillé ou linguine aux fruits de mer.",
+        contact: contacts.luiPotam,
       },
       {
         time: "15:15",
@@ -315,6 +405,8 @@ export const days = [
           label: "Ouvrir le château",
           url: "https://www.google.com/maps?q=40.117780,19.731670",
         },
+        waze: destinations.himaraCastle,
+        contactUnavailable: noDirectWhatsApp,
       },
       {
         time: "19:20",
@@ -322,6 +414,7 @@ export const days = [
         type: "sunset",
         journey: { mode: "walk", duration: "3 min" },
         detail: "Un verre au Café Butterfly, avec le château, la baie et l’horizon dans le même cadre.",
+        contact: contacts.cafeButterfly,
       },
       {
         time: "20:20",
@@ -333,16 +426,19 @@ export const days = [
             name: "Fig & Olive",
             note: "Notre choix · terrasse sous les oliviers, cuisine méditerranéenne soignée et très beau cadre",
             url: "https://www.google.com/maps?q=40.114550,19.730490",
+            contact: contacts.figOlive,
           },
           {
             name: "ELÉA Restaurant",
             note: "Cuisine la plus aboutie · jardin panoramique, moussaka et orzo à l’agneau très réputés",
             url: "https://www.google.com/maps?q=40.094700,19.766800",
+            contact: contacts.elea,
           },
           {
             name: "Taverna Lefteri",
             note: "Option authentique · poisson frais et spécialités gréco-albanaises près de la promenade",
             url: "https://www.google.com/maps/search/?api=1&query=Taverna+Lefteri+Himare",
+            contact: contacts.lefteri,
           },
         ],
       },
@@ -383,6 +479,7 @@ export const days = [
           label: "Ouvrir Astro",
           url: "https://www.google.com/maps/search/?api=1&query=Astro+Brunch%26Cocktail+Bar+Himare",
         },
+        contact: contacts.astro,
       },
       {
         time: "07:30",
@@ -399,6 +496,7 @@ export const days = [
           label: "Ouvrir le château",
           url: "https://www.google.com/maps/search/?api=1&query=3V94%2BWC5%2C+Borsh%2C+Albania",
         },
+        waze: destinations.borshCastle,
       },
       {
         time: "08:00",
@@ -412,6 +510,7 @@ export const days = [
           "Pour la photo : les ruines de la mosquée au premier plan et la mer derrière",
           "Rester sur le tracé principal, loin des murs et des bords",
         ],
+        contactUnavailable: noDirectWhatsApp,
       },
       {
         time: "10:10",
@@ -428,6 +527,8 @@ export const days = [
           label: "Ouvrir Ujvara Borsh",
           url: "https://www.google.com/maps?q=40.06406,19.85537",
         },
+        waze: destinations.ujvara,
+        contact: contacts.ujvara,
       },
       {
         time: "10:45",
@@ -444,29 +545,54 @@ export const days = [
           label: "Ouvrir le stationnement",
           url: "https://www.google.com/maps?q=40.045000,19.853770",
         },
+        waze: destinations.borshBeach,
+        contact: contacts.vilaHadhri,
       },
       {
         time: "12:25",
-        title: "Déjeuner chez Posidonas",
+        title: "Déjeuner entre Borsh et Qeparo",
         type: "food",
-        journey: { mode: "car", duration: "20 min" },
-        detail: "Table extérieure face à la mer : calamars ou poulpe, poisson frais grillé à partager, salade grecque, légumes et café.",
+        journey: { mode: "car", duration: "5–20 min" },
+        detail: "Trois options solides à choisir la veille : Posidonas pour sa table face à la mer, Veranda pour sa cuisine albanaise familiale ou Sole Luna pour déjeuner directement sur Borsh Beach.",
         tips: [
-          "Réservation : +355 69 512 1445",
+          "Posidonas · réservation : +355 69 512 1445",
+          "Veranda · réservation : +355 69 671 8488 · ouvre à midi",
+          "Sole Luna · réservation : +355 69 566 2222",
           "Demander le poids et le prix total du poisson avant cuisson",
-          "Budget indicatif : 2 500 à 4 000 ALL pour deux",
+          "Budget indicatif : 2 500 à 4 500 ALL pour deux",
+          "Départ impératif vers 13:40 pour Porto Palermo",
           "Éviter l’alcool avant de reprendre la route",
         ],
-        location: {
-          label: "Ouvrir Posidonas",
-          url: "https://www.google.com/maps/search/?api=1&query=Posidonas+Restaurant+Qeparo",
-        },
+        optionsLabel: "Restaurant à choisir",
+        options: [
+          {
+            name: "Posidonas",
+            note: "Notre choix · terrasse face à la mer, poisson frais et étape idéale avant Porto Palermo",
+            url: "https://www.google.com/maps/search/?api=1&query=Posidonas+Restaurant+Qeparo",
+            waze: destinations.posidonas,
+            contact: contacts.posidonas,
+          },
+          {
+            name: "Veranda Restaurant",
+            note: "Alternative locale · cuisine familiale, spécialités albanaises et excellente réputation à Qeparo",
+            url: "https://www.google.com/maps/search/?api=1&query=Veranda+Restaurant+Qeparo",
+            waze: destinations.veranda,
+            contact: contacts.veranda,
+          },
+          {
+            name: "Sole Luna Restaurant",
+            note: "Option la plus fluide · fruits de mer au bord de l’eau, directement sur Borsh Beach",
+            url: "https://www.google.com/maps/search/?api=1&query=Sole+Luna+Restaurant+Borsh",
+            waze: destinations.soleLuna,
+            contact: contacts.soleLuna,
+          },
+        ],
       },
       {
         time: "14:05",
         title: "Porto Palermo, la forteresse secrète",
         type: "culture",
-        journey: { mode: "car", duration: "20 min" },
+        journey: { mode: "car", duration: "15–30 min" },
         detail: "Grandes salles voûtées, galeries fraîches, trois bastions et panorama depuis le toit sur la baie circulaire et l’ancien tunnel sous-marin.",
         tips: [
           "Entrée indicative : environ 300 ALL par personne, en espèces",
@@ -477,6 +603,8 @@ export const days = [
           label: "Ouvrir Porto Palermo",
           url: "https://www.google.com/maps?q=40.06217,19.79070",
         },
+        waze: destinations.portoPalermo,
+        contactUnavailable: noDirectWhatsApp,
       },
       {
         time: "15:15",
@@ -490,6 +618,7 @@ export const days = [
           "Ne jamais nager en direction du tunnel",
           "Départ vers 17:50 après le changement de tenue",
         ],
+        contactUnavailable: noDirectWhatsApp,
       },
       {
         time: "17:50",
@@ -502,6 +631,7 @@ export const days = [
           "Laisser la voiture à l’hôtel",
           "Départ à pied vers Spile autour de 19:05 · 25 à 30 min de promenade",
         ],
+        waze: destinations.emily,
       },
       {
         time: "19:35",
@@ -519,6 +649,7 @@ export const days = [
           label: "Ouvrir Taverna Lefteri",
           url: "https://www.google.com/maps/search/?api=1&query=Taverna+Lefteri+Himare",
         },
+        contact: contacts.lefteri,
       },
       {
         time: "21:30",
@@ -565,6 +696,7 @@ export const days = [
           label: "Ouvrir Orzo",
           url: "https://www.google.com/maps/search/?api=1&query=Orzo+Summer+Edition+Himare",
         },
+        contact: contacts.orzo,
       },
       {
         time: "08:40",
@@ -580,6 +712,7 @@ export const days = [
           label: "Lancer l’itinéraire",
           url: "https://www.google.com/maps/dir/?api=1&origin=40.092099%2C19.754866&destination=39.763872%2C19.995399&travelmode=driving",
         },
+        waze: destinations.siars,
       },
       {
         time: "10:40",
@@ -594,6 +727,7 @@ export const days = [
           label: "Ouvrir l’Hotel Siars",
           url: "https://www.google.com/maps/search/?api=1&query=39.763872%2C19.995399",
         },
+        contact: contacts.siars,
       },
       {
         time: "11:00",
@@ -610,6 +744,7 @@ export const days = [
           label: "Ouvrir Lori Beach",
           url: "https://www.google.com/maps/search/?api=1&query=39.766303%2C19.994503",
         },
+        contact: contacts.loriBeach,
       },
       {
         time: "12:45",
@@ -617,6 +752,7 @@ export const days = [
         type: "food",
         detail: "Déjeuner léger directement sur la plage : salade grecque, légumes grillés et calamars ou crevettes à partager avant la visite de Butrint.",
         tips: ["Garder le repas léger pour les escaliers et les chemins irréguliers du site"],
+        contact: contacts.loriBeach,
       },
       {
         time: "13:40",
@@ -640,6 +776,7 @@ export const days = [
           label: "Ouvrir le parking",
           url: "https://www.google.com/maps/search/?api=1&query=39.745362%2C20.017816",
         },
+        waze: destinations.butrintParking,
       },
       {
         time: "15:05",
@@ -659,6 +796,7 @@ export const days = [
           label: "Ouvrir Butrint",
           url: "https://www.google.com/maps/search/?api=1&query=Butrint+National+Archaeological+Park",
         },
+        contact: contacts.butrint,
       },
       {
         time: "17:45",
@@ -666,6 +804,7 @@ export const days = [
         type: "rest",
         journey: { mode: "car", duration: "10–15 min" },
         detail: "Retour à l’Hotel Siars vers 18:00, douche rapide et tenue pour le dîner. La voiture reste au parking pour la soirée.",
+        waze: destinations.siars,
       },
       {
         time: "18:40",
@@ -692,6 +831,7 @@ export const days = [
           label: "Ouvrir Guvat",
           url: "https://www.google.com/maps/search/?api=1&query=Guvat+Bar+Restorant+Ksamil",
         },
+        contact: contacts.guvat,
       },
       {
         time: "21:15",
@@ -725,6 +865,7 @@ export const days = [
           "Emporter crème solaire, eau, masque et tuba",
           "Prévoir environ 2 000 ALL en espèces",
         ],
+        contact: contacts.siars,
       },
       {
         time: "08:30",
@@ -736,6 +877,7 @@ export const days = [
           label: "Ouvrir le parking",
           url: "https://www.google.com/maps?q=39.916722,20.181611",
         },
+        waze: destinations.blueEye,
       },
       {
         time: "09:35",
@@ -753,6 +895,7 @@ export const days = [
           label: "Ouvrir le Blue Eye",
           url: "https://www.google.com/maps?q=39.916722,20.181611",
         },
+        contactUnavailable: noDirectWhatsApp,
       },
       {
         time: "11:00",
@@ -764,6 +907,7 @@ export const days = [
           label: "Ouvrir The Mussel House",
           url: "https://www.google.com/maps?q=39.788579,20.011355",
         },
+        waze: destinations.musselHouse,
       },
       {
         time: "12:00",
@@ -779,6 +923,7 @@ export const days = [
           label: "Ouvrir The Mussel House",
           url: "https://www.google.com/maps?q=39.788579,20.011355",
         },
+        contact: contacts.musselHouse,
       },
       {
         time: "13:45",
@@ -787,6 +932,7 @@ export const days = [
         journey: { mode: "car", duration: "10 min" },
         detail: "Retour à l’Hotel Siars pour une douche, la climatisation et une vraie sieste pendant les heures les plus chaudes.",
         tips: ["Retour depuis le restaurant : environ 4 km", "Pause jusqu’à 16:20"],
+        waze: destinations.siars,
       },
       {
         time: "16:30",
@@ -804,11 +950,13 @@ export const days = [
             name: "Option A · Kayak",
             note: "Notre choix · balade avec Ksamil Water Sport autour de la baie et des îlots",
             url: "https://www.ksamilwatersport.com/",
+            contact: contacts.ksamilWaterSport,
           },
           {
             name: "Option B · Rooftop de Porta",
             note: "Version repos · piscine, transats et cocktails jusqu’au coucher du soleil, sous réserve d’un day pass",
             url: "https://www.google.com/maps?q=39.777578,20.007686",
+            contact: contacts.porta,
           },
         ],
       },
@@ -829,6 +977,7 @@ export const days = [
           label: "Contacter Ksamil Water Sport",
           url: "https://www.ksamilwatersport.com/",
         },
+        contact: contacts.ksamilWaterSport,
       },
       {
         time: "16:45",
@@ -846,6 +995,7 @@ export const days = [
           label: "Ouvrir Porta Ksamil",
           url: "https://www.google.com/maps?q=39.777578,20.007686",
         },
+        contact: contacts.porta,
       },
       {
         time: "19:25",
@@ -857,6 +1007,7 @@ export const days = [
           "Vérifier auprès de Siars que sa terrasse est accessible en soirée",
           "Avec Porta, rester sur place jusqu’à environ 20:05",
         ],
+        contact: contacts.siars,
       },
       {
         time: "20:30",
@@ -872,6 +1023,7 @@ export const days = [
           label: "Ouvrir Mëndra",
           url: "https://www.google.com/maps?q=39.768926,19.999792",
         },
+        contact: contacts.mendra,
       },
     ],
   },
@@ -894,6 +1046,7 @@ export const days = [
           "Garder passeports, téléphones et objets de valeur avec nous",
           "Préparer un petit sac séparé pour la nuit et le vol",
         ],
+        contact: contacts.siars,
       },
       {
         time: "08:40",
@@ -917,6 +1070,7 @@ export const days = [
           label: "Ouvrir le parking",
           url: "https://www.google.com/maps/search/?api=1&query=40.074906,20.140111",
         },
+        waze: destinations.gjirokastraParking,
       },
       {
         time: "10:45",
@@ -934,6 +1088,7 @@ export const days = [
           label: "Ouvrir le château",
           url: "https://www.google.com/maps/search/?api=1&query=Gjirokaster+Castle+Albania",
         },
+        contact: contacts.visitGjirokastra,
       },
       {
         time: "12:00",
@@ -942,6 +1097,7 @@ export const days = [
         journey: { mode: "walk", duration: "10 min" },
         detail: "Redescendre par les ruelles pavées de Qafa e Pazarit pour les façades, les petites boutiques et les perspectives sur le château.",
         tips: ["25 minutes suffisent pour garder la journée à l’heure"],
+        contact: contacts.visitGjirokastra,
       },
       {
         time: "12:30",
@@ -954,6 +1110,7 @@ export const days = [
           label: "Ouvrir Kardhashi",
           url: "https://www.google.com/maps/search/?api=1&query=Taverna+Tradicionale+Kardhashi+Gjirokaster",
         },
+        contact: contacts.kardhashi,
       },
       {
         time: "13:40",
@@ -971,6 +1128,7 @@ export const days = [
           label: "Ouvrir la maison",
           url: "https://www.google.com/maps/search/?api=1&query=Skenduli+House+Gjirokaster",
         },
+        contact: contacts.skenduli,
       },
       {
         time: "14:20",
@@ -995,6 +1153,7 @@ export const days = [
           label: "Lancer l’itinéraire",
           url: "https://www.google.com/maps/dir/?api=1&origin=40.074906,20.140111&destination=41.430460,19.672270&travelmode=driving",
         },
+        waze: destinations.preze,
       },
       {
         time: "18:50",
@@ -1003,6 +1162,7 @@ export const days = [
         journey: { mode: "walk", duration: "5 min" },
         detail: "Un passage court dans le château pour regarder la plaine de Tirana avant de rejoindre la table.",
         tips: ["Quinze minutes sur place", "Garder le dîner prioritaire si la route a pris du retard"],
+        contact: contacts.ballkoni,
       },
       {
         time: "19:05",
@@ -1019,6 +1179,7 @@ export const days = [
           label: "Ouvrir Ballkoni i Prezës",
           url: "https://www.google.com/maps/search/?api=1&query=41.430460,19.672270",
         },
+        contact: contacts.ballkoni,
       },
       {
         time: "20:10",
@@ -1031,6 +1192,7 @@ export const days = [
           label: "Ouvrir la station",
           url: "https://www.google.com/maps/search/?api=1&query=41.427086,19.737506",
         },
+        waze: destinations.airportFuel,
       },
       {
         time: "20:50",
@@ -1048,6 +1210,7 @@ export const days = [
           label: "Ouvrir l’aéroport",
           url: "https://www.google.com/maps/search/?api=1&query=Tirana+International+Airport",
         },
+        waze: destinations.tiranaAirport,
       },
       {
         time: "21:55",
@@ -1061,6 +1224,7 @@ export const days = [
           "Réserver dès maintenant le taxi retour de 02:30",
           "Demander si un petit-déjeuner à emporter est possible",
         ],
+        wazeUnavailable: "Adresse exacte de la chambre à Kamëz à compléter après confirmation de la réservation.",
       },
       {
         time: "22:30",
@@ -1097,6 +1261,7 @@ export const days = [
           label: "Ouvrir TIA",
           url: "https://www.google.com/maps/search/?api=1&query=Tirana+International+Airport",
         },
+        waze: destinations.tiranaAirport,
       },
       {
         time: "02:50",
